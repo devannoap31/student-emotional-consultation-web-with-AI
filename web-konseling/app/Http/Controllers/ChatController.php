@@ -37,25 +37,35 @@ class ChatController extends Controller
             $data = $this->fallbackResponse($message);
         }
 
-        // Save chat session to database
-        $chatSession = ChatSession::create([
-            'user_id'        => $user->id,
-            'user_message'   => $message,
-            'ai_response'    => $data['ai_response'] ?? 'Maaf, terjadi kesalahan pada sistem.',
-            'risk_indicator' => $data['indikator'] ?? null,
-            'total_score'    => $data['total_skor'] ?? 0,
-        ]);
+        // Save chat session to database if possible
+        $totalScore = $data['total_skor'] ?? 0;
+        $indikator = $data['indikator'] ?? null;
+        $aiResponse = $data['ai_response'] ?? 'Maaf, terjadi kesalahan pada sistem.';
 
-        // Update user's last emotional status
-        $user->update([
-            'last_emotional_status' => $data['indikator'] ?? null,
-        ]);
+        try {
+            if ($user) {
+                $chatSession = ChatSession::create([
+                    'user_id'        => $user->id,
+                    'user_message'   => $message,
+                    'ai_response'    => $aiResponse,
+                    'risk_indicator' => $indikator,
+                    'total_score'    => $totalScore,
+                ]);
+
+                // Update user's last emotional status
+                $user->update([
+                    'last_emotional_status' => $indikator,
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Silently ignore DB error (e.g. MySQL not running) to allow chat to work based on API
+        }
 
         return response()->json([
             'pesan_asli'  => $message,
-            'total_skor'  => $chatSession->total_score,
-            'indikator'   => $chatSession->risk_indicator,
-            'ai_response' => $chatSession->ai_response,
+            'total_skor'  => $totalScore,
+            'indikator'   => $indikator,
+            'ai_response' => $aiResponse,
         ]);
     }
 

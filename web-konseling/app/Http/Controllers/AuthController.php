@@ -98,4 +98,66 @@ class AuthController extends Controller
 
         return response()->json(['message' => 'Logged out successfully']);
     }
+
+    /**
+     * Web login submission.
+     */
+    public function webLogin(Request $request)
+    {
+        $request->validate([
+            'email'    => ['required', 'string', 'email'],
+            'password' => ['required', 'string'],
+        ]);
+
+        if (Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
+            $request->session()->regenerate();
+            return redirect()->intended(route('chat'));
+        }
+
+        return back()
+            ->withErrors(['email' => 'Email atau password salah.'])
+            ->onlyInput('email');
+    }
+
+    /**
+     * Web register submission.
+     */
+    public function webRegister(Request $request)
+    {
+        $request->validate([
+            'name'                  => ['required', 'string', 'max:255'],
+            'email'                 => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password'              => ['required', 'string', 'min:8', 'confirmed'],
+            'agree'                 => ['required', 'accepted'],
+        ], [
+            'agree.required'        => 'Kamu harus menyetujui syarat & ketentuan.',
+            'agree.accepted'        => 'Kamu harus menyetujui syarat & ketentuan.',
+            'password.min'          => 'Password minimal 8 karakter.',
+            'password.confirmed'    => 'Konfirmasi password tidak cocok.',
+            'email.unique'          => 'Email ini sudah terdaftar.',
+        ]);
+
+        $user = User::create([
+            'name'     => $request->name,
+            'email'    => $request->email,
+            'password' => Hash::make($request->password),
+        ]);
+
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        return redirect()->route('chat');
+    }
+
+    /**
+     * Web logout.
+     */
+    public function webLogout(Request $request)
+    {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('home');
+    }
 }

@@ -16,6 +16,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
     // Chat
-    Route::post('/chat/analyze', [ChatController::class, 'analyze']);
     Route::get('/chat/history',  [ChatController::class, 'history']);
 });
