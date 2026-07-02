@@ -46,18 +46,22 @@
         <div style="margin-top:32px;">
             <p style="font-size:11px; font-weight:800; color:#9CA3AF; text-transform:uppercase; letter-spacing:0.08em; margin:0 0 12px; padding:0 12px;">RIWAYAT</p>
             <div style="display:flex; flex-direction:column; gap:4px;">
-                <div style="display:flex; align-items:center; gap:10px; padding:10px 12px; background:#F3FBFC; border-radius:10px; font-size:13px; color:#02838D; font-weight:600; cursor:pointer;">
+                <div id="active-session-item" style="display:flex; align-items:center; gap:10px; padding:10px 12px; background:#F3FBFC; border-radius:10px; font-size:13px; color:#02838D; font-weight:600; cursor:pointer;" onclick="window.location.href='{{ route('chat') }}'">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#02838D" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                    Sesi Aktif
+                    Chat Baru
                     <div style="width:6px; height:6px; border-radius:50%; background:#02838D; margin-left:auto;"></div>
                 </div>
-                <div style="display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; font-size:13px; color:#5B5758; cursor:pointer;" onmouseover="this.style.color='#02838D'; this.style.background='#F9FAFB';" onmouseout="this.style.color='#5B5758'; this.style.background='transparent';">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                    cuaca mendung gini bikin ...
-                </div>
-                <div style="display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; font-size:13px; color:#5B5758; cursor:pointer;" onmouseover="this.style.color='#02838D'; this.style.background='#F9FAFB';" onmouseout="this.style.color='#5B5758'; this.style.background='transparent';">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                    aku hari ini "Dibantai tu...
+                <div id="sidebar-history-list" style="display:flex; flex-direction:column; gap:4px; margin-top:4px;">
+                    @if(isset($sessions) && count($sessions) > 0)
+                        @foreach($sessions as $session)
+                            <a href="{{ route('chat', ['session_id' => $session->session_id]) }}" style="display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; font-size:13px; color:#5B5758; cursor:pointer; text-decoration:none;" onmouseover="this.style.color='#02838D'; this.style.background='#F9FAFB';" onmouseout="this.style.color='#5B5758'; this.style.background='transparent';">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2; flex-shrink:0;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                                <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:inline-block; max-width:180px;">{{ $session->user_message }}</span>
+                            </a>
+                        @endforeach
+                    @else
+                        <div id="sidebar-empty-state" style="padding:10px 12px; font-size:12px; color:#9CA3AF; text-align:center;">Belum ada riwayat</div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -66,11 +70,11 @@
         <div style="margin-top:auto; padding-top:24px; border-top:1px solid #E5E7EB; display:flex; align-items:center; justify-content:space-between; padding-bottom:8px;">
             <div style="display:flex; align-items:center; gap:12px;">
                 <div style="width:36px; height:36px; border-radius:8px; background:#F3FBFC; border:1px solid #E5E7EB; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                    <span style="color:#02838D; font-size:14px; font-weight:800;">M</span>
+                    <span style="color:#02838D; font-size:14px; font-weight:800;">{{ strtoupper(substr(auth()->user()->name ?? 'M', 0, 1)) }}</span>
                 </div>
                 <div>
-                    <p style="font-size:14px; font-weight:700; color:#231F20; margin:0; line-height:1.2;">Mahasiswa Demo</p>
-                    <p style="font-size:12px; color:#5B5758; margin:0;">demo@aether.ai</p>
+                    <p style="font-size:14px; font-weight:700; color:#231F20; margin:0; line-height:1.2;">{{ auth()->user()->name ?? 'Mahasiswa' }}</p>
+                    <p style="font-size:12px; color:#5B5758; margin:0;">{{ auth()->user()->email ?? 'mahasiswa@example.com' }}</p>
                 </div>
             </div>
             <form action="{{ route('logout') }}" method="POST">
@@ -87,6 +91,15 @@
         
         {{-- Messages Container --}}
         <div id="messages-container" style="flex:1; overflow-y:auto; padding:32px 40px; display:flex; flex-direction:column; gap:32px; scroll-behavior:smooth;">
+            {{-- Welcome Message / Empty State --}}
+            <div id="welcome-message" style="display:flex; flex-direction:column; align-items:center; justify-content:center; flex:1; text-align:center; color:#5B5758; margin:auto;">
+                <div style="width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg, #02838D, #4FAFB6); display:flex; align-items:center; justify-content:center; margin-bottom:24px; box-shadow:0 8px 24px rgba(2, 131, 141, 0.2);">
+                    <span style="color:#FFF; font-weight:900; font-family:'Playfair Display', serif; font-size:40px;">Æ</span>
+                </div>
+                <h2 style="font-size:24px; font-weight:700; color:#231F20; margin-bottom:12px;">Halo, {{ explode(' ', auth()->user()->name ?? 'Mahasiswa')[0] }}!</h2>
+                <p style="font-size:16px; max-width:400px; line-height:1.5;">Saya Aether, siap mendengarkan cerita dan perasaanmu hari ini. Silakan mulai percakapan baru di bawah.</p>
+            </div>
+
             {{-- Messages will be injected here by JS --}}
             <div id="messages-list" style="display:flex; flex-direction:column; gap:32px;"></div>
 
@@ -248,8 +261,17 @@ const tips = [
 ];
 document.getElementById('daily-tip').textContent = `"${tips[new Date().getDay() % tips.length]}"`;
 
+let currentSessionId = "{{ $currentSessionId ?? '' }}";
+if (!currentSessionId) {
+    currentSessionId = crypto.randomUUID();
+}
+
 let messages = [];
 const AI_ENDPOINT = '/chat/analyze';
+
+function newSession() {
+    window.location.href = '{{ route('chat') }}';
+}
 
 function renderMessage(role, text, time = null, badgeData = null) {
     const list = document.getElementById('messages-list');
@@ -263,7 +285,7 @@ function renderMessage(role, text, time = null, badgeData = null) {
     
     if(role === 'user') {
         avatar.style.background = '#F9FAFB';
-        avatar.innerHTML = '<span style="color:#138A96; font-size:14px; font-weight:800;">M</span>';
+        avatar.innerHTML = '<span style="color:#138A96; font-size:14px; font-weight:800;">{{ strtoupper(substr(auth()->user()->name ?? "M", 0, 1)) }}</span>';
     } else {
         avatar.style.background = '#138A96';
         avatar.innerHTML = '<span style="color:#FFF; font-weight:900; font-family:\'Playfair Display\', serif; font-size:16px;">Æ</span>';
@@ -333,6 +355,29 @@ async function sendMessage(e) {
     renderMessage('user', text);
     messages.push({ role: 'user', content: text });
 
+    if (messages.length === 1) {
+        let shortText = text.length > 20 ? text.substring(0, 20) + "..." : text;
+        document.title = shortText + " - Aether AI";
+        
+        // Append to sidebar dynamically
+        const sidebarList = document.getElementById('sidebar-history-list');
+        if (sidebarList) {
+            const emptyState = document.getElementById('sidebar-empty-state');
+            if (emptyState) emptyState.remove();
+
+            const newItem = document.createElement('a');
+            newItem.href = `?session_id=${currentSessionId}`;
+            newItem.style.cssText = "display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; font-size:13px; color:#5B5758; cursor:pointer; text-decoration:none;";
+            newItem.onmouseover = function() { this.style.color='#02838D'; this.style.background='#F9FAFB'; };
+            newItem.onmouseout = function() { this.style.color='#5B5758'; this.style.background='transparent'; };
+            newItem.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2; flex-shrink:0;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:inline-block; max-width:180px;">${text}</span>`;
+            sidebarList.insertBefore(newItem, sidebarList.firstChild);
+        }
+    }
+
+    const welcomeMsg = document.getElementById('welcome-message');
+    if (welcomeMsg) welcomeMsg.style.display = 'none';
+
     const typing = document.getElementById('typing-indicator');
     typing.style.display = 'flex';
     const container = document.getElementById('messages-container');
@@ -348,7 +393,7 @@ async function sendMessage(e) {
                 'Accept': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`,
             },
-            body: JSON.stringify({ message: text })
+            body: JSON.stringify({ message: text, session_id: currentSessionId })
         });
 
         typing.style.display = 'none';
@@ -487,4 +532,31 @@ function newSession() {
     messages = [];
 }
 </script>
+
+@if(isset($currentChats) && count($currentChats) > 0)
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const welcomeMsg = document.getElementById('welcome-message');
+        if (welcomeMsg) welcomeMsg.style.display = 'none';
+
+        @foreach($currentChats as $chat)
+            renderMessage('user', `{!! addslashes($chat->user_message) !!}`, '{{ $chat->created_at->format('H:i') }}');
+            
+            @php
+                $statusColor = $chat->risk_indicator == 'Merah' ? '#EF4444' : ($chat->risk_indicator == 'Kuning' ? '#EAB308' : '#10B981');
+                $statusRgb = $chat->risk_indicator == 'Merah' ? '239,68,68' : ($chat->risk_indicator == 'Kuning' ? '234,179,8' : '16,185,129');
+                $statusLabel = $chat->risk_indicator == 'Merah' ? 'Krisis' : ($chat->risk_indicator == 'Kuning' ? 'Distress' : 'Stabil');
+            @endphp
+
+            renderMessage('ai', `{!! addslashes($chat->ai_response) !!}`, '{{ $chat->created_at->format('H:i') }}', {
+                label: '{{ $statusLabel }} ({{ $chat->total_score }})',
+                color: '{{ $statusColor }}',
+                rgb: '{{ $statusRgb }}'
+            });
+        @endforeach
+
+        document.title = '{!! addslashes(substr($currentChats->first()->user_message, 0, 20)) !!}... - Aether AI';
+    });
+</script>
+@endif
 @endpush

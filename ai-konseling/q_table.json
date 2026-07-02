@@ -1,0 +1,17 @@
+{
+    "Hijau": {
+        "validasi": 3.1019200000000002,
+        "cbt": -2.70391,
+        "eksplorasi": -4.54498
+    },
+    "Kuning": {
+        "validasi": 0.0,
+        "cbt": 0.0,
+        "eksplorasi": 0.0
+    },
+    "Merah": {
+        "validasi": 9.924190000000001,
+        "cbt": 0.0,
+        "eksplorasi": 0.0
+    }
+}

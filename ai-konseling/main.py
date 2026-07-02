@@ -18,7 +18,14 @@ NORMALIZED_PREDEFINED_RESPONSES = {clean_message(k): v for k, v in PREDEFINED_RE
 # Memuat isi file .env ke dalam sistem
 load_dotenv()
 
+from typing import List, Dict, Optional
+from rl_agent import QLearningAgent
+import json
+
 app = FastAPI()
+
+rl_agent = QLearningAgent()
+session_states = {} # Simple memory for RL state transitions
 
 # Mengizinkan akses dari aplikasi Laravel
 app.add_middleware(
@@ -34,48 +41,86 @@ app.add_middleware(
 
 class ChatInput(BaseModel):
     message: str
+    session_id: Optional[str] = None
+    history: Optional[List[Dict[str, str]]] = None
 
 @app.post("/analyze-emotion")
 def analyze_emotion(data: ChatInput):
     
-    # 1. Lakukan Perhitungan dengan modul nlp_engine.py
+    # 1. Hitung skor awal
     score, indicator, details = calculate_emotion_score(data.message)
 
-    # 2. Bersihkan pesan untuk pencarian jawaban kustom presisi tinggi
+    # RL Reward logic
+    if data.session_id and data.session_id in session_states:
+        prev_state, prev_action, prev_score = session_states[data.session_id]
+        reward = prev_score - score # Positive reward if stress goes down
+        rl_agent.update(prev_state, prev_action, reward, indicator)
+
+    # 2. Cek database kustom
     msg_cleaned = clean_message(data.message)
-
     ai_reply = NORMALIZED_PREDEFINED_RESPONSES.get(msg_cleaned)
+    is_oot = False
 
-    # 3. Jika tidak ada di database kustom, gunakan Gemini AI
+    # 3. Gunakan Gemini AI
     if not ai_reply:
+        action = rl_agent.choose_action(indicator)
+        
+        if data.session_id:
+            session_states[data.session_id] = (indicator, action, score)
+            
+        action_prompt = ""
+        if action == "validasi":
+            action_prompt = "Fokus pada memvalidasi perasaan pengguna. Berikan empati mendalam tanpa memberikan saran."
+        elif action == "cbt":
+            action_prompt = "Berikan saran praktis berdasarkan teknik Cognitive Behavioral Therapy (CBT) seperti grounding atau restrukturisasi kognitif."
+        elif action == "eksplorasi":
+            action_prompt = "Ajukan pertanyaan terbuka yang memancing pengguna untuk bercerita lebih banyak tentang perasaannya."
+
+        history_text = ""
+        if data.history:
+            history_text = "\nRiwayat Percakapan Sebelumnya:\n"
+            for h in data.history:
+                history_text += f"{'Aether' if h['role']=='model' else 'Mahasiswa'}: {h['content']}\n"
+        
         system_prompt = f"""
         Kamu adalah chatbot konselor sebaya (peer counselor) untuk mahasiswa bernama Aether. 
-        Seorang mahasiswa datang dan curhat: "{data.message}"
         
+        {history_text}
+        
+        Mahasiswa sekarang berkata: "{data.message}"
         Hasil deteksi sistem: Dia berada di indikator warna {indicator} (Skor: {score}).
         
-        Instruksi wajib:
-        1. Berikan respon penuh empati, validasi perasaannya, jangan menggurui.
-        2. Jika indikator Kuning/Merah, sisipkan teknik CBT (misal: mengatur napas, melihat masalah dari sudut pandang lain).
-        3. Gunakan bahasa kasual mahasiswa (gunakan 'aku' dan 'kamu').
-        4. Balasan harus singkat (maksimal 3 paragraf).
+        Strategi Respon Saat Ini: {action_prompt}
         
-        Contoh gaya bahasa yang HARUS kamu tiru (berdasarkan database kami):
-        - "Pasti pusing ya kalau semuanya numpuk. Coba tarik napas dulu, kita urutkan satu-satu yuk."
-        - "Aku dengerin kok. Sedih itu wajar banget, jangan dipendam sendirian ya."
-        - "Sistem kampus emang kadang bikin emosi. Sabarin aja, yang penting lulus dan aman!"
+        Instruksi wajib:
+        1. Patuhi Strategi Respon Saat Ini di atas.
+        2. Gunakan bahasa kasual mahasiswa (gunakan 'aku' dan 'kamu').
+        3. Balasan harus singkat (maksimal 3 paragraf).
+        4. KELUARKAN JAWABAN DALAM FORMAT JSON SEPERTI INI:
+           {{"is_oot": false, "reply": "jawaban kamu disini"}}
+        5. Jika pengguna mengajak diskusi tentang hal di luar kesehatan mental, emosi, curhat, atau kehidupan mahasiswa (contoh: coding, politik, cuaca, dll), set "is_oot" menjadi true, dan tolak secara halus.
         """
 
         try:
             api_key = os.getenv("GEMINI_API_KEY")
-            model_name = "gemini-2.5-flash" 
+            model_name = "gemini-3.5-flash" 
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
             payload = {
-                "contents": [{"parts": [{"text": system_prompt}]}]
+                "contents": [{"parts": [{"text": system_prompt}]}],
+                "generationConfig": {"response_mime_type": "application/json"}
             }
             response = requests.post(url, headers={'Content-Type': 'application/json'}, json=payload)
             data_json = response.json()
-            ai_reply = data_json['candidates'][0]['content']['parts'][0]['text']
+            raw_reply = data_json['candidates'][0]['content']['parts'][0]['text']
+            
+            parsed = json.loads(raw_reply)
+            ai_reply = parsed.get("reply", "Maaf, aku tidak mengerti.")
+            is_oot = parsed.get("is_oot", False)
+            
+            if is_oot:
+                score = 0
+                indicator = "Netral"
+                details = []
             
         except Exception as e:
             if indicator == "Merah":

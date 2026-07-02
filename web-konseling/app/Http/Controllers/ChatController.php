@@ -15,15 +15,34 @@ class ChatController extends Controller
     {
         $request->validate([
             'message' => 'required|string|max:5000',
+            'session_id' => 'required|string',
         ]);
 
         $user    = $request->user();
         $message = $request->input('message');
+        $sessionId = $request->input('session_id');
+
+        // Fetch history for this session (last 10 exchanges for context)
+        $history = [];
+        if ($user) {
+            $pastChats = ChatSession::where('user_id', $user->id)
+                            ->where('session_id', $sessionId)
+                            ->orderBy('created_at', 'desc')
+                            ->limit(10)
+                            ->get()
+                            ->reverse();
+            foreach ($pastChats as $chat) {
+                $history[] = ['role' => 'user', 'content' => $chat->user_message];
+                $history[] = ['role' => 'model', 'content' => $chat->ai_response];
+            }
+        }
 
         // Forward to Python FastAPI AI engine
         try {
-            $aiResponse = Http::timeout(30)->post('http://127.0.0.1:8000/analyze-emotion', [
+            $aiResponse = Http::timeout(45)->post('http://127.0.0.1:8000/analyze-emotion', [
                 'message' => $message,
+                'session_id' => $sessionId,
+                'history' => $history,
             ]);
 
             if ($aiResponse->successful()) {
@@ -45,6 +64,7 @@ class ChatController extends Controller
         try {
             if ($user) {
                 $chatSession = ChatSession::create([
+                    'session_id'     => $sessionId,
                     'user_id'        => $user->id,
                     'user_message'   => $message,
                     'ai_response'    => $aiResponse,

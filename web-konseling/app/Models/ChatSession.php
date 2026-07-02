@@ -10,6 +10,7 @@ class ChatSession extends Model
     use HasFactory;
 
     protected $fillable = [
+        'session_id',
         'user_id',
         'user_message',
         'ai_response',
