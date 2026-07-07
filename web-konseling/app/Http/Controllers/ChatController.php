@@ -24,17 +24,15 @@ class ChatController extends Controller
 
         // Fetch history for this session (last 10 exchanges for context)
         $history = [];
-        if ($user) {
-            $pastChats = ChatSession::where('user_id', $user->id)
-                            ->where('session_id', $sessionId)
-                            ->orderBy('created_at', 'desc')
-                            ->limit(10)
-                            ->get()
-                            ->reverse();
-            foreach ($pastChats as $chat) {
-                $history[] = ['role' => 'user', 'content' => $chat->user_message];
-                $history[] = ['role' => 'model', 'content' => $chat->ai_response];
-            }
+        $pastChats = ChatSession::where('user_id', $user->id)
+                        ->where('session_id', $sessionId)
+                        ->orderBy('created_at', 'desc')
+                        ->limit(10)
+                        ->get()
+                        ->reverse();
+        foreach ($pastChats as $chat) {
+            $history[] = ['role' => 'user', 'content' => $chat->user_message];
+            $history[] = ['role' => 'model', 'content' => $chat->ai_response];
         }
 
         // Forward to Python FastAPI AI engine
@@ -87,26 +85,24 @@ class ChatController extends Controller
         }
 
         try {
-            if ($user) {
-                // Determine session name if this is the first message in the session
-                $sessionName = $message;
-                $isNewSession = ChatSession::where('user_id', $user->id)->where('session_id', $sessionId)->doesntExist();
-                
-                $chatSession = ChatSession::create([
-                    'session_id'     => $sessionId,
-                    'session_name'   => $isNewSession ? substr($message, 0, 50) : null,
-                    'user_id'        => $user->id,
-                    'user_message'   => $message,
-                    'ai_response'    => $aiResponse,
-                    'risk_indicator' => $indikator,
-                    'total_score'    => $totalScore,
-                ]);
+            // Determine session name if this is the first message in the session
+            $sessionName = $message;
+            $isNewSession = ChatSession::where('user_id', $user->id)->where('session_id', $sessionId)->doesntExist();
+            
+            $chatSession = ChatSession::create([
+                'session_id'     => $sessionId,
+                'session_name'   => $isNewSession ? substr($message, 0, 50) : null,
+                'user_id'        => $user->id,
+                'user_message'   => $message,
+                'ai_response'    => $aiResponse,
+                'risk_indicator' => $indikator,
+                'total_score'    => $totalScore,
+            ]);
 
-                // Update user's last emotional status
-                $user->update([
-                    'last_emotional_status' => $indikator,
-                ]);
-            }
+            // Update user's last emotional status
+            $user->update([
+                'last_emotional_status' => $indikator,
+            ]);
         } catch (\Exception $e) {
             // Silently ignore DB error (e.g. MySQL not running) to allow chat to work based on API
         }
@@ -224,9 +220,6 @@ class ChatController extends Controller
         ]);
 
         $user = $request->user();
-        if (!$user) {
-            return response()->json(['error' => 'Unauthorized'], 401);
-        }
 
         // Update all messages in the session to have the new session_name
         ChatSession::where('user_id', $user->id)
@@ -242,9 +235,6 @@ class ChatController extends Controller
     public function destroy(Request $request, $sessionId)
     {
         $user = $request->user();
-        if (!$user) {
-            return response()->json(['error' => 'Unauthorized'], 401);
-        }
 
         ChatSession::where('user_id', $user->id)
             ->where('session_id', $sessionId)

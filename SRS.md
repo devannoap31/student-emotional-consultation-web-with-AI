@@ -1,402 +1,161 @@
 # Software Requirements Specification (SRS)
-## AETHER - Platform Konsultasi Kesehatan Mental Mahasiswa Berbasis AI
+**for Aether - Platform Konsultasi Mental Mahasiswa Berbasis AI**
 
-**Versi:** 1.0 | **Status:** Active Development | **Tanggal:** Juni 2024
-
----
-
-## 1. Deskripsi Sistem
-
-**AETHER** adalah platform konsultasi kesehatan mental real-time untuk mahasiswa dengan AI counselor yang menggunakan NLP untuk analisis emosi dan Gemini API untuk respons berempati berbasis CBT (Cognitive Behavioral Therapy).
-
-### Arsitektur 3-Tier
-```
-Frontend (Vue 3 + Vite)          Backend (Laravel 13)         AI Engine (Python + FastAPI)
-Port: 5173                       Port: 8080                   Port: 8000
-├─ Chat Interface               ├─ Authentication (Sanctum)  ├─ NLP Scoring
-├─ Mood Tracking               ├─ Chat Management            ├─ Gemini AI
-├─ Resources Center            ├─ User Management            ├─ Predefined Responses
-└─ Analytics                   └─ Database (MySQL)           └─ Crisis Detection
-```
+**Version:** 1.0  
+**Prepared by:** Antigravity (AI Assistant)  
 
 ---
 
-## 2. FRONTEND REQUIREMENTS
-
-### Features
-| Feature | Component | Status |
-|---------|-----------|--------|
-| Landing Page | LandingPage.vue | ✓ |
-| Login/Register | LoginPage.vue, RegisterPage.vue | ✓ |
-| Chat Interface | ChatPage.vue, ChatWindow.vue | ✓ |
-| Mood Tracking | MoodTracking.vue + MoodChart.vue | ✓ |
-| Resource Center | ResourceCenter.vue | ✓ |
-| User Profile | ProfilePage.vue | ⏳ |
-| Emergency Modal | EmergencyModal.vue | ✓ |
-
-### Tech Stack
-- Vue 3 (Composition API)
-- Vite (Build Tool)
-- Tailwind CSS v4
-- Pinia (State Management)
-- Axios (HTTP Client)
-- Chart.js (Visualization)
-
-### State Management (Pinia)
-```javascript
-// Auth Store
-auth.js: {isAuthenticated, user, token, isLoading, error}
-
-// Chat Store  
-chat.js: {sessions, messages, currentSessionId, isAnalyzing, sessionScore, sessionEmotion, showEmergencyModal}
-
-// Mood Store
-mood.js: {weeklyStats, averageScore, moodDistribution, isLoading}
-```
-
-### Key Endpoints (Frontend → Backend)
-```
-POST   /api/register           # Register user
-POST   /api/login              # Login with email/password
-POST   /api/demo-login         # Quick demo login
-POST   /api/logout             # Logout
-GET    /api/user               # Get current user
-POST   /api/chat/analyze       # Send message for analysis
-GET    /api/chat/history       # Get chat history
-DELETE /api/chat/:id           # Delete chat session
-GET    /api/mood/weekly        # Get mood statistics
-```
+## Table of Contents
+1. [Introduction](#1-introduction)
+2. [Overall Description](#2-overall-description)
+3. [System Features](#3-system-features)
+4. [External Interface Requirements](#4-external-interface-requirements)
+5. [Other Nonfunctional Requirements](#5-other-nonfunctional-requirements)
+6. [Appendix A: Glossary](#appendix-a-glossary)
 
 ---
 
-## 3. BACKEND REQUIREMENTS
+## 1. Introduction
 
-### Features
-| Feature | Controller | Status |
-|---------|-----------|--------|
-| User Registration | AuthController::register() | ✓ |
-| User Login | AuthController::login() | ✓ |
-| Demo Login | AuthController::demoLogin() | ✓ |
-| Chat Analysis | ChatController::analyze() | ✓ |
-| Chat History | ChatController::history() | ✓ |
-| Mood Statistics | ChatController (methods) | ✓ |
+### 1.1 Purpose
+Dokumen *Software Requirements Specification* (SRS) ini bertujuan untuk mendefinisikan spesifikasi kebutuhan perangkat lunak dari sistem **Aether**, yaitu sebuah *Website Chatbot AI* untuk deteksi dan klasifikasi emosi mahasiswa berbasis *Natural Language Processing* (NLP) dengan metode *Rule-Based Scoring*. Dokumen ini mencakup seluruh fitur, antarmuka, dan persyaratan non-fungsional dari sistem.
 
-### Tech Stack
-- Laravel Framework 13
-- PHP 8.3+
-- Laravel Sanctum (Token Auth)
-- MySQL Database
-- Eloquent ORM
+### 1.2 Document Conventions
+Dokumen ini disusun menggunakan format Markdown. Kebutuhan fungsional (*Functional Requirements*) akan diidentifikasi dengan kode unik seperti `REQ-F-XX` dan kebutuhan non-fungsional dengan `REQ-NF-XX` untuk memudahkan pelacakan. Tingkat prioritas (High, Medium, Low) dicantumkan pada deskripsi fitur.
 
-### Database Schema
-```sql
--- Users Table
-CREATE TABLE users (
-  id BIGINT PRIMARY KEY,
-  name VARCHAR(255),
-  email VARCHAR(255) UNIQUE,
-  password VARCHAR(255) -- bcrypt hashed,
-  last_emotional_status ENUM('Hijau','Kuning','Merah'),
-  created_at, updated_at
-);
+### 1.3 Intended Audience and Reading Suggestions
+Dokumen ini ditujukan untuk:
+- **Developer/Programmer:** Sebagai acuan utama dalam membangun dan mengembangkan fitur aplikasi.
+- **Dosen Pembimbing & Penguji:** Sebagai dokumen evaluasi untuk mengukur sejauh mana sistem yang dibangun telah memenuhi rancangan awal.
+Disarankan untuk membaca mulai dari Bagian 2 (*Overall Description*) untuk memahami konteks sistem, kemudian dilanjutkan ke Bagian 3 (*System Features*) untuk melihat detail fungsionalitasnya.
 
--- Chat Sessions Table
-CREATE TABLE chat_sessions (
-  id BIGINT PRIMARY KEY,
-  user_id BIGINT -- FK,
-  user_message TEXT,
-  ai_response TEXT,
-  risk_indicator ENUM('Hijau','Kuning','Merah'),
-  total_score INT(0-100),
-  details JSON,
-  created_at, updated_at,
-  INDEX(user_id, created_at)
-);
-```
+### 1.4 Product Scope
+**Aether** adalah platform berbasis web yang menyediakan layanan pendampingan kesehatan mental dan dukungan emosional awal (Psychological First Aid) bagi mahasiswa. Sistem menggunakan teknologi NLP untuk menganalisis konteks bahasa dan sentimen pengguna secara mendalam, serta mengklasifikasikan kondisi emosi mahasiswa ke dalam 3 zona risiko (Hijau, Kuning, Merah). Aether beroperasi 24/7 dan menawarkan ruang aman tanpa penghakiman. Platform ini **tidak dirancang** untuk menggantikan psikiater medis profesional, melainkan sebagai alat intervensi awal.
 
-### API Endpoints Detail
-
-**POST /api/register**
-```json
-Request: {name, email, password, password_confirmation}
-Response: {id, name, email, token, message: "Registrasi berhasil"}
-```
-
-**POST /api/login**
-```json
-Request: {email, password}
-Response: {id, name, email, token, message: "Login berhasil"}
-```
-
-**POST /api/chat/analyze** (auth required)
-```json
-Request: {message: "Aku stres banget sama tugas kuliah"}
-Response: {
-  pesan_asli, 
-  total_skor: 65,
-  indikator: "Kuning",
-  ai_response: "Aku dengerin kok...",
-  details: [{category, keyword, points}, ...]
-}
-```
-
-**GET /api/chat/history** (auth required)
-```json
-Response: [{id, user_message, ai_response, risk_indicator, total_score, created_at}, ...]
-```
-
-### Key Functions
-- **Password Hashing:** bcrypt (Laravel Hash facade)
-- **JWT Token:** Laravel Sanctum (personal access tokens)
-- **AI Integration:** HTTP call to Python FastAPI with 30s timeout
-- **Fallback:** Local keyword-based response if AI server offline
-- **Database:** Eloquent relationships (User → ChatSessions)
+### 1.5 References
+- `RANCANGAN.txt`: Dokumen rancangan latar belakang dan fitur utama proyek.
+- `petunjuk_penggunaan_dan_arsitektur.txt`: Dokumen teknis arsitektur sistem (Laravel + FastAPI).
+- Standar penulisan SRS berbasis IEEE Std 830-1998.
 
 ---
 
-## 4. API & NLP ENGINE REQUIREMENTS
+## 2. Overall Description
 
-### Tech Stack
-- FastAPI (Python)
-- Uvicorn Server (Port 8000)
-- Google Gemini 2.5-Flash API
-- NLTK (NLP)
+### 2.1 Product Perspective
+Aether adalah sistem mandiri (*self-contained product*) yang beroperasi dengan arsitektur *microservices* sederhana. Sistem ini terdiri dari dua komponen utama:
+1. **Frontend & Backend Management (Laravel/PHP):** Menangani antarmuka pengguna, autentikasi, database, riwayat chat, dan modul *mood tracking*.
+2. **AI Engine (FastAPI/Python):** Berfungsi sebagai mesin pemroses NLP yang menerima pesan dari Laravel, melakukan analisis sentimen, mendeteksi niat (*intent*), dan merumuskan respons psikologis terarah (menggunakan Google Gemini API).
 
-### Endpoint: POST /analyze-emotion
-```json
-Request: {message: "Aku stres banget..."}
-Response: {
-  pesan_asli,
-  total_skor: 0-100,
-  indikator: "Hijau|Kuning|Merah",
-  ai_response: "...",
-  details: [...]
-}
-```
+### 2.2 Product Functions
+Secara garis besar, Aether memungkinkan pengguna untuk:
+- Melakukan registrasi, login, dan autentikasi.
+- Berinteraksi dengan Chatbot AI layaknya konselor.
+- Mendapatkan skor indikator krisis emosional secara *real-time*.
+- Melacak riwayat emosi harian (*Mood Tracking*) melalui *dashboard* interaktif.
+- Menerima rekomendasi artikel/video/kontak darurat (Resource Center) yang disesuaikan secara otomatis dengan tingkat emosi mereka.
+- Mengelola riwayat obrolan (Ubah nama sesi, hapus sesi).
 
-### NLP Scoring Engine (nlp_engine.py)
+### 2.3 User Classes and Characteristics
+- **Mahasiswa (End-User):** Pengguna utama dengan berbagai tingkat literasi teknologi. Mereka berinteraksi dengan sistem untuk mendapatkan dukungan emosional. Membutuhkan antarmuka yang sangat mudah dipahami (intuitif) dan nyaman (menenangkan) secara visual.
 
-**4 Scoring Categories:**
-1. **Masalah (0-40 poin):** Keywords untuk akademik/sosial (tugas, skripsi, teman, bully, dst)
-2. **Urgensi (0-30 poin):** Keywords emosi intensif (stres, sedih, takut, cemas, burnout, dst)
-3. **Krisis (0-20 poin):** Keywords bahaya diri (bunuh diri, mengakhiri hidup, dst)
-4. **Regulasi Positif (-20 poin max):** Keywords positif (semangat, lega, optimis, dst)
+### 2.4 Operating Environment
+- **Platform Pengguna:** *Web browser* modern (Google Chrome, Mozilla Firefox, Safari, Microsoft Edge) pada perangkat *Desktop* maupun *Mobile*.
+- **Platform Server:** Server berbasis Linux/Windows.
+  - Subsistem 1: PHP 8.2+, Laravel 11, Node.js (untuk Vite), MySQL.
+  - Subsistem 2: Python 3.10+, FastAPI, Uvicorn.
 
-**Score Formula:**
-```
-total_score = MIN(100, MAX(0, 
-  base(10) + akademik_score + urgensi_score + krisis_score - positif_score
-))
-```
+### 2.5 Design and Implementation Constraints
+- **Waktu Respons:** Komunikasi antara Laravel dan FastAPI (serta API pihak ketiga) tidak boleh memakan waktu terlalu lama agar pengalaman *chat* terasa instan.
+- **Batasan Konteks:** AI dirancang untuk membatasi obrolan hanya pada seputar kesehatan mental dan akademik. Pembicaraan di luar konteks tidak akan diperhitungkan skornya.
 
-**Classification:**
-- 🟢 **Hijau (0-35):** Stabil
-- 🟡 **Kuning (36-70):** Distress Emosional
-- 🔴 **Merah (>70):** Krisis
-
-### Response Generation Pipeline
-
-**Priority 1: Predefined Responses (170+ patterns)**
-- Normalized message matching → Return pre-written response instantly
-- Benefit: Sub-millisecond response, 100% accuracy
-
-**Priority 2: Google Gemini API (if no match)**
-```python
-system_prompt = """
-Kamu adalah chatbot konselor sebaya (peer counselor) untuk mahasiswa.
-Curhat: "{message}"
-Status: {indicator} (Skor: {score})
-
-Instruksi:
-1. Berikan respons penuh empati, validasi perasaan
-2. Jika Kuning/Merah: sisipkan teknik CBT (napas, perspective shift)
-3. Gunakan bahasa kasual mahasiswa ('aku', 'kamu')
-4. Maksimal 3 paragraf
-"""
-# Call Gemini API → Return response
-```
-
-**Priority 3: Fallback (if Gemini timeout)**
-- Use keyword-based response from category matching
-
-### CORS Configuration
-```python
-allow_origins: [
-  "http://127.0.0.1:8080",  # Laravel
-  "http://localhost:8080",
-  "http://localhost:5173",   # Vue dev
-  "http://127.0.0.1:5173"
-]
-```
+### 2.6 Assumptions and Dependencies
+- **Ketergantungan Eksternal:** Sistem sangat bergantung pada ketersediaan layanan Google Gemini API untuk melakukan pembangkitan teks (NLP).
+- **Asumsi:** Pengguna memiliki koneksi internet yang memadai saat berinteraksi dengan sistem.
 
 ---
 
-## 5. DATA FLOW & USER JOURNEY
+## 3. System Features
 
-### Chat Processing Flow
-```
-1. User types message in Vue frontend
-   ↓
-2. Frontend: POST /api/chat/analyze {message}
-   ↓
-3. Laravel Backend: 
-   - Validate message (required, max 5000 chars)
-   - Get authenticated user
-   - Forward to Python AI: HTTP POST :8000/analyze-emotion
-   ↓
-4. Python AI Engine:
-   - Normalize text (slang → standard Indonesian)
-   - Run NLP scoring → Calculate score + indicator
-   - Check predefined responses
-   - Call Gemini API (if needed) → Generate response
-   - Append analysis breakdown
-   ↓
-5. Laravel Backend:
-   - Save to DB: ChatSession (user_id, message, response, score, indicator)
-   - Update user.last_emotional_status
-   - Return response to frontend
-   ↓
-6. Vue Frontend:
-   - Display AI response with typewriter animation
-   - Update EmotionBadge (score + indicator)
-   - Show AnalyticsPanel breakdown
-   - Trigger EmergencyModal if Merah
-   - Update Mood Chart data
-```
+Sistem ini dipecah berdasarkan fitur fungsional utamanya.
 
-### Authentication Flow
-```
-1. User → Frontend: email + password
-2. POST /api/login
-3. Backend: Verify password (bcrypt) + Generate Sanctum token
-4. Frontend: Store JWT in localStorage + Set Authorization header
-5. Subsequent requests: Authorization: Bearer {token}
-6. Backend: auth:sanctum middleware validates token
-```
+### 3.1 Asesmen dan Skrining Keadaan Emosional (AI/NLP)
+**Deskripsi dan Prioritas:** Fitur inti (*High Priority*). Menganalisis teks yang diinputkan pengguna untuk mendeteksi tingkat krisis emosional.
+- **REQ-F-01:** Sistem (FastAPI) harus mampu menerima teks, menormalisasi bahasa gaul (*slang*), dan menganalisis sentimen menggunakan algoritma pemrosesan bahasa alami.
+- **REQ-F-02:** Sistem harus mampu mengembalikan status risiko (Hijau/Aman, Kuning/Distress, Merah/Krisis) dan skor dari skala 0 hingga 100.
+- **REQ-F-03:** Sistem tidak boleh menghitung skor untuk topik yang berada di luar ranah kesehatan mental/akademik.
+
+### 3.2 Chatbot Pendampingan Awal (CBT & Mindfulness)
+**Deskripsi dan Prioritas:** Fitur interaksi utama (*High Priority*). Menyediakan respons empatik terhadap curhatan mahasiswa.
+- **REQ-F-04:** AI Engine harus mampu membangkitkan teks balasan yang bersifat suportif, tidak menghakimi, dan berbasis pendekatan psikologis (CBT).
+- **REQ-F-05:** Laravel harus menyimpan *history* (konteks percakapan) dalam 1 sesi agar chatbot mengingat obrolan yang sedang berlangsung.
+
+### 3.3 Dashboard Mood Tracking Dinamis
+**Deskripsi dan Prioritas:** Visualisasi analitik pengguna (*Medium Priority*).
+- **REQ-F-06:** Sistem harus menampilkan total sesi, rata-rata skor kestabilan (0-10), dan hari berturut-turut (*streak*) berdasarkan data sesi chat di database.
+- **REQ-F-07:** Sistem harus menampilkan visualisasi grafik (*Bar Chart*) tren emosi 7 hari terakhir.
+- **REQ-F-08 (Quick Log):** Pengguna dapat mencatat *mood* manual tanpa chat panjang melalui tombol emoji di dashboard, dan otomatis tersimpan ke riwayat sesi.
+
+### 3.4 Pusat Sumber Daya (Resource Center) Terpersonalisasi
+**Deskripsi dan Prioritas:** Modul pendukung (*High Priority*).
+- **REQ-F-09:** Chatbot harus menyisipkan tautan rekomendasi video/artikel secara otomatis ke dalam balasannya sesuai dengan tingkat krisis pengguna (Misal: Video relaksasi ringan untuk "Hijau", Kontak konseling darurat untuk "Merah").
+- **REQ-F-10:** Pengguna dapat menelusuri secara manual direktori *Resource Center* melalui *sidebar*.
+
+### 3.5 Autentikasi dan Manajemen Sesi
+**Deskripsi dan Prioritas:** Modul keamanan privasi (*High Priority*).
+- **REQ-F-11:** Sistem harus melindungi halaman Chat, Mood, dan Resource menggunakan *Middleware* yang mencegah akses tamu tanpa login.
+- **REQ-F-12:** Pengguna dapat mengganti nama (Rename) sesi obrolan mereka di *sidebar*.
+- **REQ-F-13:** Pengguna dapat menghapus (Delete) riwayat sesi obrolan mereka secara permanen dari database.
 
 ---
 
-## 6. SECURITY REQUIREMENTS
+## 4. External Interface Requirements
 
-| Requirement | Implementation | Status |
-|-------------|-----------------|--------|
-| Password hashing | bcrypt (Laravel Hash) | ✓ |
-| Authentication | JWT via Sanctum | ✓ |
-| Protected routes | auth:sanctum middleware | ✓ |
-| Input validation | Laravel validation rules | ✓ |
-| SQL injection prevention | Eloquent ORM | ✓ |
-| XSS protection | Vue template escaping | ✓ |
-| CSRF protection | Laravel middleware | ✓ |
-| Rate limiting | 50 req/min per user (planned) | ⏳ |
-| Crisis detection | NLP keyword matching | ✓ |
-| Emergency resources | Modal with hotlines | ✓ |
+### 4.1 User Interfaces
+- Antarmuka harus mengadopsi estetika *Healthline Editorial* (bersih, luas, dengan banyak ruang putih/negatif) untuk menciptakan suasana menenangkan.
+- Skema warna menggunakan warna penenang seperti *Teal/Cyan* (`#02838D`), putih, abu-abu muda, dan indikator warna *traffic light* (Merah, Kuning, Hijau) untuk status krisis.
+- Tersedia navigasi *Sidebar* di sebelah kiri untuk berpindah modul, yang bersifat *collapsible* (dapat disembunyikan) pada mode *Mobile*.
 
----
+### 4.2 Hardware Interfaces
+- Sistem tidak membutuhkan integrasi perangkat keras keras khusus.
 
-## 7. PERFORMANCE TARGETS
+### 4.3 Software Interfaces
+- **Database:** Sistem harus berkomunikasi dengan sistem manajemen basis data relasional (MySQL) yang menyimpan tabel `users`, `chat_sessions`, dan `resources`.
+- **FastAPI Endpoint:** Laravel (`web-konseling`) berkomunikasi dengan Python FastAPI (`ai-konseling`) melalui titik akhir HTTP `POST /analyze`.
+- **Eksternal API:** FastAPI Python berkomunikasi dengan *Google Generative AI SDK* (Gemini-1.5-flash) menggunakan REST API.
 
-| Metric | Target |
-|--------|--------|
-| Analyze endpoint latency | < 2s (predefined), < 5s (Gemini) |
-| Frontend FCP | < 2s |
-| Frontend LCP | < 3s |
-| Database query | < 500ms |
-| API response | < 1s |
+### 4.4 Communications Interfaces
+- Komunikasi antara klien (*browser*) dan server (Laravel) dilakukan melalui protokol standar HTTP/HTTPS.
+- Komunikasi antara *microservices* (Laravel ke FastAPI) dilakukan dengan bertukar paket muatan (*payload*) berformat JSON.
 
 ---
 
-## 8. SETUP & DEPLOYMENT
+## 5. Other Nonfunctional Requirements
 
-### Local Development
-```bash
-# Terminal 1: Backend (Port 8080)
-cd web-konseling
-composer install && cp .env.example .env
-php artisan key:generate && php artisan migrate
-php artisan serve --port=8080
+### 5.1 Performance Requirements
+- **REQ-NF-01:** Proses analisis NLP dan pembangkitan balasan AI harus selesai dan tampil di layar pengguna dalam waktu optimal (target di bawah 4 detik).
 
-# Terminal 2: AI Engine (Port 8000)
-cd ai-konseling
-python -m venv venv && source venv/bin/activate
-pip install fastapi uvicorn requests pydantic python-dotenv
-echo "GEMINI_API_KEY=your_key" > .env
-uvicorn main:app --reload --port 8000
+### 5.2 Safety Requirements
+- **REQ-NF-02:** Sistem harus dapat mendeteksi kondisi krisis absolut (seperti keinginan bunuh diri). Jika terdeteksi, sistem akan secara proaktif memunculkan kontak layanan bantuan darurat di luar teks balasan AI reguler.
 
-# Terminal 3: Frontend (Port 5173)
-cd aether-frontend
-npm install && npm run dev
-```
+### 5.3 Security Requirements
+- **REQ-NF-03:** Semua halaman fungsional harus dilindungi oleh Middleware *Auth* standar Laravel.
+- **REQ-NF-04:** Sistem diwajibkan mengimplementasikan perlindungan terhadap pemalsuan permintaan silang (*Cross-Site Request Forgery / CSRF*) pada setiap formulir.
+- **REQ-NF-05:** Kata sandi pengguna harus diamankan menggunakan algoritma *hashing* kriptografi standar industri (Bcrypt).
 
-### Production Checklist
-- [ ] Enable HTTPS/TLS
-- [ ] Set APP_ENV=production
-- [ ] Configure CORS for production domain
-- [ ] Setup database backups (daily)
-- [ ] Enable error monitoring (Sentry)
-- [ ] Configure rate limiting
-- [ ] Setup environment variables in .env (secrets)
-- [ ] Enable database encryption
+### 5.4 Software Quality Attributes
+- **Usability:** Antarmuka harus mudah dioperasikan bahkan oleh orang yang sedang dalam kondisi kalut secara emosional (navigasi minimum, teks tebal, kontras baik).
+- **Maintainability:** Penggunaan arsitektur MVC (Model-View-Controller) pada Laravel untuk memudahkan modifikasi kode dan antarmuka di masa mendatang tanpa memecah logika inti aplikasi.
+
+### 5.5 Business Rules
+- Jika input pengguna adalah sapaan santai ("Halo", "Hai"), skor krisis ditetapkan pada angka dasar (0) tanpa perlu divalidasi ke skala yang lebih rumit.
+- Sistem hanya melayani obrolan yang diklasifikasikan sebagai masalah kehidupan mahasiswa (Tugas, Skripsi, Asmara, Keluarga, Pertemanan, Finansial). Pertanyaan teknis atau *coding* akan ditolak oleh AI secara halus.
 
 ---
 
-## 9. TECHNOLOGY SUMMARY
-
-| Layer | Tech | Version |
-|-------|------|---------|
-| **Frontend** | Vue 3 | 3.4.29 |
-| | Vite | 5.3.1 |
-| | Tailwind | 4.0.0 |
-| | Pinia | 2.1.7 |
-| **Backend** | Laravel | 13.0 |
-| | PHP | 8.3+ |
-| | Sanctum | 4.3 |
-| | MySQL | 5.7+ |
-| **AI** | FastAPI | Latest |
-| | Python | 3.10+ |
-| | Gemini API | 2.5-Flash |
-| | NLTK | Latest |
-
----
-
-## 10. FEATURES SUMMARY
-
-### ✓ Implemented
-- User registration & login (JWT + Sanctum)
-- Real-time chat with AI counselor
-- Emotion analysis (NLP + Gemini)
-- Mood tracking & visualization
-- Emergency crisis detection & modal
-- Resource center (tips, meditation)
-- Chat history management
-- Responsive design (mobile + desktop)
-
-### ⏳ Planned
-- User profile & settings
-- Export mood data (CSV/PDF)
-- Rate limiting
-- Advanced filtering & search
-- Video resources
-- Integration with professional counselors
-- Mobile app (React Native)
-
----
-
-## 11. Glossary
-
-| Term | Meaning |
-|------|---------|
-| **Hijau** | Green - Stable emotional status (0-35) |
-| **Kuning** | Yellow - Emotional distress (36-70) |
-| **Merah** | Red - Crisis status (>70) |
-| **NLP** | Natural Language Processing |
-| **CBT** | Cognitive Behavioral Therapy |
-| **Sanctum** | Laravel API authentication package |
-| **Predefined Response** | Pre-written therapeutic response |
-| **Gemini** | Google's generative AI model |
-| **Pinia** | Vue 3 state management |
-
----
-
-**Document Version:** 1.0  
-**Last Updated:** Juni 2024  
-**Next Review:** Desember 2024
+## Appendix A: Glossary
+- **Aether:** Nama sandi dari platform konseling ini.
+- **NLP (Natural Language Processing):** Cabang kecerdasan buatan yang membantu komputer memahami, menafsirkan, dan memanipulasi bahasa manusia.
+- **CBT (Cognitive Behavioral Therapy):** Bentuk perawatan psikologis yang efektif untuk berbagai masalah termasuk depresi dan gangguan kecemasan.
+- **Middleware:** Komponen *software* Laravel yang bertindak sebagai jembatan antara permintaan dan tanggapan; digunakan di sini untuk menyeleksi pengguna yang memiliki akses (login).
+- **FastAPI:** Kerangka kerja web modern berbasis Python yang digunakan untuk membangun subsistem API pemroses kecerdasan buatan.

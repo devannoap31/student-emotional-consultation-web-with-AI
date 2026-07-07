@@ -12,9 +12,6 @@ class MoodController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        if (!$user) {
-            return redirect()->route('login');
-        }
 
         // Get all unique sessions for the user (group by session_id)
         $allSessions = ChatSession::where('user_id', $user->id)
@@ -146,9 +143,6 @@ class MoodController extends Controller
         ]);
 
         $user = $request->user();
-        if (!$user) {
-            return response()->json(['error' => 'Unauthorized'], 401);
-        }
 
         $cat = $request->input('category');
         $note = $request->input('note');
