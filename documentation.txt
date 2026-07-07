@@ -1,0 +1,164 @@
+================================================================================
+          PANDUAN PENGGUNAAN DAN DOKUMENTASI ARSITEKTUR FILE AETHER
+       Sistem Konsultasi Emosional Mahasiswa Berbasis AI & NLP Engine
+================================================================================
+
+Selamat datang di Aether! Dokumen ini dibuat untuk memandu Anda tentang cara 
+menjalankan aplikasi, alur kerja sistem, serta fungsi dari setiap file penting 
+yang ada di dalam repositori ini.
+
+Aether adalah platform kesehatan mental modern bertema "Calm Sage & Botanical"
+yang dirancang khusus bagi mahasiswa untuk mengenali dan mengonsultasikan kondisi
+emosional mereka secara privat, interaktif, dan penuh empati.
+
+--------------------------------------------------------------------------------
+1. ARSITEKTUR SISTEM (2-TIER ARCHITECTURE)
+--------------------------------------------------------------------------------
+Sistem Aether dibagi menjadi 2 bagian utama yang saling terintegrasi (Monolith + Microservice):
+
+1. FRONTEND & BACKEND WEB (web-konseling)
+   - Teknologi: Laravel 13, PHP 8.4, Laravel Blade, Tailwind CSS v4, MySQL Database.
+   - Fungsi: Berperan sebagai antarmuka pengguna (Frontend) sekaligus pengatur logika bisnis (Backend). 
+     Menyediakan tampilan modern yang menenangkan (Zen theme), fitur manajemen pengguna (Autentikasi), 
+     penyimpanan riwayat sesi obrolan, halaman visualisasi grafik suasana hati (Mood Tracking), 
+     serta direktori edukasi mandiri (Resource Center).
+
+2. AI & NLP SCORING ENGINE (ai-konseling)
+   - Teknologi: FastAPI (Python 3.10+), Uvicorn, NLTK, Q-Learning (Reinforcement Learning), Google Gemini AI API.
+   - Fungsi: Memproses pesan dari mahasiswa melalui NLP berbasis Rule-Based Scoring 
+     serta algoritma Reinforcement Learning (Q-Learning) untuk menghasilkan skor tingkat distress (0-100), 
+     klasifikasi emosi (Hijau/Kuning/Merah), dan menentukan jenis pendekatan respons yang optimal. 
+     Kemudian menggunakan Gemini AI untuk merangkai teks balasan yang empatik berbasis teknik 
+     psikologis (Cognitive Behavioral Therapy / CBT, Validasi, Eksplorasi).
+
+--------------------------------------------------------------------------------
+2. PERSYARATAN & CARA MENJALANKAN SISTEM (SETUP LOKAL)
+--------------------------------------------------------------------------------
+
+A. Prasyarat Sistem:
+   - Laragon atau XAMPP (dengan MySQL aktif).
+   - PHP >= 8.2 dan Composer.
+   - Node.js >= 24 dan npm.
+   - Python >= 3.10 (disarankan 3.14 agar seragam) dan pip.
+
+B. Tahap 1: Setup Backend & Frontend (Laravel)
+   1. Buka terminal di folder `web-konseling`.
+   2. Jalankan perintah instalasi pustaka PHP dan Node.js (untuk menghindari eror/ warning selama penginstalan berlangsung, disarankan untuk mematikan windows defender sementara):
+      > composer install
+      > npm install
+   3. Buat file environment: Copy file `.env.example`, ubah namanya menjadi `.env`.
+   4. Generate Application Key Laravel:
+      > php artisan key:generate
+   5. Konfigurasi Database: 
+      - Buka Laragon/XAMPP dan buat database bernama `db_konseling`.
+      - Buka file `.env` dan pastikan pengaturan DB mengarah ke `db_konseling` dengan username `root` (password dikosongkan).
+   6. Jalankan migrasi tabel database:
+      > php artisan migrate
+
+C. Tahap 2: Setup Mesin AI (Python FastAPI)
+   1. Buka terminal baru di folder `ai-konseling`.
+   2. Buat Virtual Environment baru:
+      > python -m venv venv
+   3. Aktifkan venv tersebut:
+      - Windows: > .\venv\Scripts\activate
+      - Mac/Linux: > source venv/bin/activate
+   4. Install library yang dibutuhkan:
+      > pip install fastapi uvicorn requests pydantic python-dotenv
+   5. Buat file `.env` di dalam folder `ai-konseling`.
+   6. Isi dengan kunci API Gemini dari Google AI Studio:
+      GEMINI_API_KEY=masukkan_api_key_kalian_disini
+
+D. Tahap 3: Cara Menjalankan Server (3 Terminal Berbeda)
+
+   TERMINAL 1: Vite CSS Compiler
+   1. Buka folder `web-konseling`.
+   2. Jalankan perintah (biarkan terminal ini menyala):
+      > npm run dev
+
+   TERMINAL 2: Laravel Web Server (Port 8080)
+   1. Buka folder `web-konseling`.
+   2. Jalankan perintah (biarkan terminal ini menyala):
+      > php artisan serve --port=8080
+
+   TERMINAL 3: FastAPI AI Server (Port 8000)
+   1. Buka folder `ai-konseling`, lalu aktifkan venv.
+   2. Jalankan perintah (biarkan terminal ini menyala):
+      > uvicorn main:app --reload --port 8000
+
+   Akses aplikasi web Aether melalui browser di alamat: http://127.0.0.1:8080
+
+--------------------------------------------------------------------------------
+3. FUNGSI PER FILE & DIREKTORI
+--------------------------------------------------------------------------------
+
+================================================================================
+A. MODUL FRONTEND & BACKEND (`web-konseling`)
+================================================================================
+Direktori ini berisi kode antarmuka pengguna (Blade) dan logika pengontrol data.
+
+- `routes/web.php`
+  Mendefinisikan rute web (URL) untuk pengguna. Terdapat rute publik untuk Login/Register 
+  serta rute khusus (Dashboard, Chat, Mood, Resources) yang diamankan menggunakan 
+  Middleware otentikasi (Middleware `auth`).
+
+- `app/Http/Controllers/`
+  1. `AuthController.php`: Mengelola pendaftaran akun, validasi login, dan logout (termasuk fitur autentikasi otomatis).
+  2. `ChatController.php`: Mengirim pesan ke AI FastAPI, menyimpan balasan ke database, mengelola riwayat chat, mengubah nama sesi, dan menghapus sesi obrolan.
+  3. `MoodController.php`: Menyajikan data analitik mood, menghitung `streak`, rata-rata skor stabilitas, grafik tren 7 hari, serta memproses pencatatan `Quick Log Mood` secara manual.
+  4. `ResourceController.php`: Menampilkan koleksi video relaksasi, artikel, dan kontak konselor yang telah disesuaikan di *Resource Center*.
+
+- `resources/views/`
+  1. `layouts/app.blade.php`: File tata letak (template) global yang mencakup navigasi samping (*Sidebar*) bergaya *Calm Sage & Botanical*.
+  2. `chat/index.blade.php`: Halaman inti percakapan dengan antarmuka chat bubble dan efek indikator status emosional.
+  3. `mood/index.blade.php`: Halaman dasbor pelacak suasana hati (Mood Tracker) yang memvisualisasikan matriks statistik dari riwayat chat.
+  4. `resources/index.blade.php`: Halaman pustaka edukasi psikologi.
+
+- `resources/css/app.css`
+  Pusat desain Tailwind CSS v4. Di sinilah warna khusus tema Aether (Teal/Sage) dan aturan font diatur.
+
+- `app/Models/`
+  Model data untuk `User` (pengguna) dan `ChatSession` (riwayat obrolan) yang terhubung menggunakan relasi *Eloquent* ke database MySQL.
+
+================================================================================
+B. MODUL AI & NLP SCORING ENGINE (`ai-konseling`)
+================================================================================
+Direktori Python yang bertindak sebagai otak/mesin penganalisis emosi dan respons AI.
+
+- `main.py`
+  Server utama FastAPI. Menyediakan endpoint POST `/analyze` yang dipanggil oleh Laravel.
+  Menerima teks pesan, menganalisis emosi, serta mengembalikan skor, indikator krisis, strategi yang dipilih oleh Q-Learning, dan balasan yang diformulasikan oleh Google Gemini.
+
+- `nlp_engine.py`
+  Algoritma inti pemrosesan bahasa (NLP) berbasis *Rule-Based Scoring*. Melakukan normalisasi slang, pencocokan kata kunci, penghitungan bobot pada 4 kategori parameter, serta penentuan klasifikasi emosi:
+    🟢 Skor 0 - 35   : STABIL (Hijau)
+    🟡 Skor 36 - 70  : DISTRESS EMOSIONAL (Kuning)
+    🔴 Skor > 70     : KRISIS (Merah)
+
+- `q_learning.py` & `q_table.json`
+  Modul Reinforcement Learning (Q-Learning) untuk memilih pendekatan respons AI terbaik 
+  (seperti: validasi, cbt, eksplorasi) berdasarkan kategori *state* emosi mahasiswa saat ini.
+  Mesin ini membelajarkan AI seiring berjalannya waktu agar dapat bereaksi dengan metode 
+  psikologi paling efektif.
+
+- `predefined_responses.py`
+  Kumpulan respons kaku (*fallback*) apabila terjadi masalah komunikasi dengan API Gemini.
+
+--------------------------------------------------------------------------------
+4. ALUR KERJA PLATFORM (BAGAIMANA SISTEM BEKERJA)
+--------------------------------------------------------------------------------
+
+1. Mahasiswa membuka portal web Aether dan masuk ke akun mereka.
+2. Mahasiswa masuk ke halaman Chat dan mengetikkan curahan hati (misal: "Aku stres mikirin skripsi").
+3. Teks dari browser dikirimkan oleh sistem Laravel ke endpoint FastAPI `/analyze`.
+4. FastAPI menganalisis kalimat menggunakan modul NLP:
+   - "stres", "skripsi" terdeteksi sebagai kata kunci.
+   - Skor Stres didapat (misal: 45) dan dikategorikan ke 🟡 Kuning (Distress).
+5. Modul `q_learning.py` melihat *state* (Kuning) dan memilih *action* (misalnya: strategi Eksplorasi) berdasarkan tabel `q_table.json`.
+6. AI Gemini dipanggil untuk menghasilkan pesan balasan yang empatik menggunakan strategi Eksplorasi, sambil memberikan rekomendasi video relaksasi.
+7. FastAPI mengembalikan jawaban ke Laravel. Laravel menyimpannya ke tabel `chat_sessions`.
+8. Tampilan obrolan secara dinamis memunculkan balasan AI, dan indikator lencana emosi di panel mahasiswa akan segera berganti warna dan menyesuaikan skor.
+9. Di halaman Mood Tracker, skor tersebut kini berkontribusi secara langsung terhadap grafik tren emosi mingguan mahasiswa.
+
+================================================================================
+      Aether - Platform Konsultasi Mental Mahasiswa Berbasis Kecerdasan Buatan
+================================================================================

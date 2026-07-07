@@ -35,7 +35,7 @@ Disarankan untuk membaca mulai dari Bagian 2 (*Overall Description*) untuk memah
 
 ### 1.5 References
 - `RANCANGAN.txt`: Dokumen rancangan latar belakang dan fitur utama proyek.
-- `petunjuk_penggunaan_dan_arsitektur.txt`: Dokumen teknis arsitektur sistem (Laravel + FastAPI).
+- `documentation.txt`: Panduan penggunaan dan dokumentasi arsitektur file Aether.
 - Standar penulisan SRS berbasis IEEE Std 830-1998.
 
 ---
@@ -62,8 +62,8 @@ Secara garis besar, Aether memungkinkan pengguna untuk:
 ### 2.4 Operating Environment
 - **Platform Pengguna:** *Web browser* modern (Google Chrome, Mozilla Firefox, Safari, Microsoft Edge) pada perangkat *Desktop* maupun *Mobile*.
 - **Platform Server:** Server berbasis Linux/Windows.
-  - Subsistem 1: PHP 8.2+, Laravel 11, Node.js (untuk Vite), MySQL.
-  - Subsistem 2: Python 3.10+, FastAPI, Uvicorn.
+  - Subsistem 1: PHP 8.4, Laravel 13, Node.js (untuk Vite), MySQL.
+  - Subsistem 2: Python 3.10+, FastAPI, Uvicorn (menggunakan algoritma Q-Learning).
 
 ### 2.5 Design and Implementation Constraints
 - **Waktu Respons:** Komunikasi antara Laravel dan FastAPI (serta API pihak ketiga) tidak boleh memakan waktu terlalu lama agar pengalaman *chat* terasa instan.
@@ -122,7 +122,7 @@ Sistem ini dipecah berdasarkan fitur fungsional utamanya.
 ### 4.3 Software Interfaces
 - **Database:** Sistem harus berkomunikasi dengan sistem manajemen basis data relasional (MySQL) yang menyimpan tabel `users`, `chat_sessions`, dan `resources`.
 - **FastAPI Endpoint:** Laravel (`web-konseling`) berkomunikasi dengan Python FastAPI (`ai-konseling`) melalui titik akhir HTTP `POST /analyze`.
-- **Eksternal API:** FastAPI Python berkomunikasi dengan *Google Generative AI SDK* (Gemini-1.5-flash) menggunakan REST API.
+- **Eksternal API & AI Model:** FastAPI Python berkomunikasi dengan *Google Generative AI SDK* (Gemini-1.5-flash) menggunakan REST API, serta menggunakan model *Reinforcement Learning* (Q-Learning) yang tersimpan di `q_table.json` untuk optimasi pengambilan keputusan metode psikologi.
 
 ### 4.4 Communications Interfaces
 - Komunikasi antara klien (*browser*) dan server (Laravel) dilakukan melalui protokol standar HTTP/HTTPS.
