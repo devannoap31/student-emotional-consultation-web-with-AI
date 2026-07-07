@@ -36,7 +36,7 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                 Mood Tracking
             </a>
-            <a href="#" style="display:flex; align-items:center; gap:12px; padding:12px 16px; background:transparent; border-radius:12px; color:#5B5758; text-decoration:none; font-size:14px; font-weight:600; transition:all 0.2s;" onmouseover="this.style.color='#02838D'; this.style.background='#F3FBFC';" onmouseout="this.style.color='#5B5758'; this.style.background='transparent';">
+            <a href="{{ route('resources.index') }}" style="display:flex; align-items:center; gap:12px; padding:12px 16px; background:transparent; border-radius:12px; color:#5B5758; text-decoration:none; font-size:14px; font-weight:600; transition:all 0.2s;" onmouseover="this.style.color='#02838D'; this.style.background='#F3FBFC';" onmouseout="this.style.color='#5B5758'; this.style.background='transparent';">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
                 Resource Center
             </a>
@@ -54,10 +54,23 @@
                 <div id="sidebar-history-list" style="display:flex; flex-direction:column; gap:4px; margin-top:4px;">
                     @if(isset($sessions) && count($sessions) > 0)
                         @foreach($sessions as $session)
-                            <a href="{{ route('chat', ['session_id' => $session->session_id]) }}" style="display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; font-size:13px; color:#5B5758; cursor:pointer; text-decoration:none;" onmouseover="this.style.color='#02838D'; this.style.background='#F9FAFB';" onmouseout="this.style.color='#5B5758'; this.style.background='transparent';">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2; flex-shrink:0;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                                <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:inline-block; max-width:180px;">{{ $session->user_message }}</span>
-                            </a>
+                            <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 12px; border-radius:10px; cursor:pointer; transition:all 0.2s;" class="session-item-hover" onmouseover="this.style.background='#F9FAFB'; this.querySelector('.session-menu-btn').style.opacity='1';" onmouseout="this.style.background='transparent'; this.querySelector('.session-menu-btn').style.opacity='0';">
+                                <a href="{{ route('chat', ['session_id' => $session->session_id]) }}" style="display:flex; align-items:center; gap:10px; text-decoration:none; color:#5B5758; flex:1; min-width:0;" onmouseover="this.style.color='#02838D';" onmouseout="this.style.color='#5B5758';">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                                    <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:inline-block; max-width:140px;">{{ $session->session_name ?? $session->user_message }}</span>
+                                </a>
+                                
+                                <div style="position:relative;">
+                                    <button class="session-menu-btn" style="background:none; border:none; color:#9CA3AF; cursor:pointer; opacity:0; transition:opacity 0.2s; padding:2px;" onclick="toggleSessionMenu('menu-{{ $session->session_id }}', event)">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+                                    </button>
+                                    
+                                    <div id="menu-{{ $session->session_id }}" class="session-menu-dropdown" style="display:none; position:absolute; right:0; top:20px; background:#FFF; border:1px solid #E5E7EB; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1); width:120px; z-index:50; flex-direction:column; padding:4px;">
+                                        <button onclick="renameSession('{{ $session->session_id }}', '{{ addslashes($session->session_name ?? $session->user_message) }}')" style="background:none; border:none; text-align:left; padding:8px 12px; font-size:12px; color:#5B5758; cursor:pointer; border-radius:4px;" onmouseover="this.style.background='#F3FBFC'; this.style.color='#02838D';" onmouseout="this.style.background='none'; this.style.color='#5B5758';">Ubah Nama</button>
+                                        <button onclick="deleteSession('{{ $session->session_id }}')" style="background:none; border:none; text-align:left; padding:8px 12px; font-size:12px; color:#EF4444; cursor:pointer; border-radius:4px;" onmouseover="this.style.background='#FEF2F2';" onmouseout="this.style.background='none';">Hapus</button>
+                                    </div>
+                                </div>
+                            </div>
                         @endforeach
                     @else
                         <div id="sidebar-empty-state" style="padding:10px 12px; font-size:12px; color:#9CA3AF; text-align:center;">Belum ada riwayat</div>
@@ -212,8 +225,10 @@
         {{-- Rekomendasi --}}
         <div style="margin-bottom:24px;">
             <p style="font-size:11px; font-weight:700; text-transform:uppercase; color:#9CA3AF; margin:0 0 10px;">Rekomendasi</p>
-            <div style="background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.2); border-radius:12px; padding:16px;">
-                <p id="rekomendasi-text" style="font-size:12px; color:#10B981; margin:0; line-height:1.5; font-weight:600;">Kondisimu terlihat stabil. Pertahankan kebiasaan positifmu dan tetap jaga kesehatan mentalmu. 💚</p>
+            <div id="rekomendasi-container">
+                <div style="background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.2); border-radius:12px; padding:16px;">
+                    <p id="rekomendasi-text" style="font-size:12px; color:#10B981; margin:0; line-height:1.5; font-weight:600;">Kondisimu terlihat stabil. Pertahankan kebiasaan positifmu dan tetap jaga kesehatan mentalmu. 💚</p>
+                </div>
             </div>
         </div>
 
@@ -518,11 +533,36 @@ function updateDashboard(data) {
     document.getElementById('analysis-risk').style.color = riskColor;
     document.getElementById('analysis-score').textContent = score;
 
-    const recEl = document.getElementById('rekomendasi-text');
-    recEl.textContent = rec;
-    recEl.style.color = color;
-    recEl.parentElement.style.background = `rgba(${color === '#10B981' ? '16,185,129' : (color === '#EAB308' ? '234,179,8' : '239,68,68')}, 0.05)`;
-    recEl.parentElement.style.borderColor = `rgba(${color === '#10B981' ? '16,185,129' : (color === '#EAB308' ? '234,179,8' : '239,68,68')}, 0.2)`;
+    const container = document.getElementById('rekomendasi-container');
+    
+    if (data.rekomendasi && data.rekomendasi.length > 0) {
+        let html = '<div style="display:flex; flex-direction:column; gap:8px;">';
+        data.rekomendasi.forEach(res => {
+            let icon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>';
+            if (res.type === 'video') icon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>';
+            if (res.type === 'kontak') icon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>';
+            
+            html += `
+                <a href="${res.url}" target="_blank" style="display:flex; gap:12px; align-items:flex-start; background:#FFFFFF; border:1px solid #E5E7EB; border-radius:12px; padding:12px; text-decoration:none; color:inherit; transition:box-shadow 0.2s;">
+                    <div style="background:#F3FBFC; color:#02838D; padding:8px; border-radius:8px; display:flex;">
+                        ${icon}
+                    </div>
+                    <div>
+                        <h4 style="font-size:12px; font-weight:700; margin:0 0 4px; color:#231F20;">${res.title}</h4>
+                        <p style="font-size:11px; margin:0; color:#5B5758; line-height:1.4;">${res.description || 'Klik untuk membuka sumber daya.'}</p>
+                    </div>
+                </a>
+            `;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    } else {
+        container.innerHTML = `
+            <div style="background:rgba(${color === '#10B981' ? '16,185,129' : (color === '#EAB308' ? '234,179,8' : '239,68,68')}, 0.05); border:1px solid rgba(${color === '#10B981' ? '16,185,129' : (color === '#EAB308' ? '234,179,8' : '239,68,68')}, 0.2); border-radius:12px; padding:16px;">
+                <p id="rekomendasi-text" style="font-size:12px; color:${color}; margin:0; line-height:1.5; font-weight:600;">${rec}</p>
+            </div>
+        `;
+    }
 }
 
 // Initial Data is empty, wait for user input.
@@ -530,6 +570,80 @@ function updateDashboard(data) {
 function newSession() {
     document.getElementById('messages-list').innerHTML = '';
     messages = [];
+}
+
+// ── Session Menu Handlers ──
+function toggleSessionMenu(menuId, event) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    // Close all other menus
+    document.querySelectorAll('.session-menu-dropdown').forEach(m => {
+        if (m.id !== menuId) m.style.display = 'none';
+    });
+    
+    const menu = document.getElementById(menuId);
+    if (menu.style.display === 'none' || !menu.style.display) {
+        menu.style.display = 'flex';
+    } else {
+        menu.style.display = 'none';
+    }
+}
+
+// Close menu when clicking outside
+document.addEventListener('click', function(event) {
+    if (!event.target.closest('.session-item-hover')) {
+        document.querySelectorAll('.session-menu-dropdown').forEach(m => {
+            m.style.display = 'none';
+        });
+    }
+});
+
+function renameSession(sessionId, currentName) {
+    const newName = prompt('Ubah Nama Sesi:', currentName);
+    if (newName && newName.trim() !== '' && newName !== currentName) {
+        fetch(`/chat/${sessionId}/rename`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ session_name: newName.trim() })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Gagal merubah nama sesi.');
+            }
+        });
+    }
+}
+
+function deleteSession(sessionId) {
+    if (confirm('Apakah Anda yakin ingin menghapus riwayat obrolan ini?')) {
+        fetch(`/chat/${sessionId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // If deleting current session, redirect to /chat
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('session_id') === sessionId) {
+                    window.location.href = '/chat';
+                } else {
+                    window.location.reload();
+                }
+            } else {
+                alert('Gagal menghapus riwayat.');
+            }
+        });
+    }
 }
 </script>
 

@@ -1,0 +1,46 @@
+1. JUDUL: Perancangan Website Chatbot AI untuk Deteksi dan Klasifikasi Emosi Mahasiswa Berbasis NLP dengan Metode Rule-Based Scoring 
+==================================================================================================================
+
+2. LATAR BELAKANG: Mahasiswa sering kali menghadapi tekanan akademik dan sosial yang intens, namun sering terkendala oleh keterbatasan aksesibilitas saat harus mencari dukungan bagi kesehatan mental mereka, sehingga mengakibatkan kondisi emosional yang sering terabaikan dan berpotensi memicu academic burnout. Kesenjangan antara kebutuhan akan ruang refleksi yang aman dan ketersediaan layanan pendukung profesional yang terbatas menuntut adanya inovasi teknologi yang mampu memberikan intervensi secara mandiri dan real-time. Oleh karena itu, diperlukan perancangan website chatbot berbasis kecerdasan buatan sebagai solusi pendampingan awal yang bersifat rahasia bagi mahasiswa melalui platform web. Proyek ini berfokus pada penyediaan tool kesehatan mental dan dukungan emosional dengan perancangan website chatbot yang mengintegrasikan teknologi Natural Language Processing (NLP) untuk menganalisis konteks bahasa dan sentimen pengguna secara mendalam, serta dikombinasikan dengan pendekatan rule-based sebagai landasan logika sistem yang sistematis dalam melakukan klasifikasi emosi dan memberikan respon yang terarah. Komponen utama AI-nya adalah sistem skrining dan pendampingan awal yang bekerja 24/7. Sistem ini menggunakan teknik analisis teks untuk menilai kondisi emosional pengguna (mahasiswa) berdasarkan deskripsi yang mereka masukkan. Proyek ini sangat menekankan pada kerahasiaan data dan etika dalam penanganan informasi sensitif. Melalui perpaduan teknologi ini, sistem mampu mendeteksi serta mengklasifikasikan kondisi emosional secara otomatis, memberikan sumber daya pendukung yang relevan, serta menjadi jembatan akses untuk penanganan lebih lanjut guna menciptakan ekosistem kesehatan mental yang lebih suportif di lingkungan kampus.
+==================================================================================================================
+
+3. FITUR UTAMA:
+    a. Asesmen dan Skrining Keadaan Emosional (AI/NLP)
+       - Menggunakan Sentiment Analysis atau Emotion Detection dari teks input pengguna melalui sesi chat.
+       - Algoritma untuk mengidentifikasi tingkat risiko atau indikasi masalah kesehatan mental yang serius.
+       - Sistem peringatan dini jika terdeteksi krisis akut.
+    
+    b. Chatbot Pendampingan Awal (AI)
+       - Menawarkan ruang aman bagi mahasiswa untuk berbagi tanpa penghakiman.
+       - Memberikan tanggapan yang didasarkan pada prinsip Konseling Kognitif Perilaku (Cognitive Behavioral Therapy/CBT) atau teknik mindfulness yang terstruktur.
+       - Memberikan saran coping mechanism atau latihan relaksasi secara otomatis.
+    
+    c. Pusat Sumber Daya Terpersonalisasi
+       - Pustaka artikel, video, dan tool swadaya (misalnya, pelacak suasana hati) yang disesuaikan dengan masalah spesifik pengguna.
+       - Direktori kontak konselor dan layanan dukungan darurat yang relevan dengan lokasi/universitas mahasiswa.
+    
+    d. Fitur Anonimitas dan Keamanan
+       - Menjamin kerahasiaan data sesuai standar privasi.
+       - Opsi untuk berinteraksi sepenuhnya secara anonim tanpa menyimpan PII (Personally Identifiable Information).
+==================================================================================================================
+
+4. KONSEP WEBSITE KONSELOR
+    a. Landing Page
+       - Pengguna masuk ke halaman awal dengan menu Mulai Curhat dan Check-in Emosi, serta navigasi seperti Beranda, Tentang, Sumber Daya, dan Kontak Bantuan.
+    b. Dashboard (Halaman Utama)
+       - Setelah masuk, pengguna diarahkan ke dashboard yang berisi ringkasan emosi pengguna, fitur utama (chat AI, jurnal, mood tracking), serta rekomendasi singkat. Dashboard berfungsi sebagai pusat aktivitas pengguna.
+    c. Input Emosi
+       - Pengguna memasukkan kondisi melalui chat, atau pilihan emosi.
+       - Contoh: “Aku lagi stres banget sama tugas kuliah.”
+    d. Proses AI
+       - Sistem memproses input melalui analisis teks (sentimen, emosi, dan tingkat risiko). Output: emosi (stres), sentimen (negatif), risiko (sedang).
+    e. Hasil Analisis
+       - Ditampilkan dalam bentuk informasi kondisi pengguna dengan indikator warna: hijau (aman), kuning (waspada), merah (risiko tinggi).
+    f. Respond Chatbot
+       - Chatbot memberikan respon empati dan solusi awal berbasis pendekatan psikologis.
+    g. Rekomendasi Otomatis
+       - Sistem menampilkan saran seperti artikel, video relaksasi, atau latihan pernapasan pada halaman sumber daya.
+    h. Mood Tracking
+       - Pengguna dapat melihat perkembangan emosi melalui grafik, riwayat mood, dan insight sederhana.
+    i. Penanganan Risiko Tinggi
+       - Jika terdeteksi kondisi berbahaya, sistem menampilkan peringatan khusus dan menyediakan akses ke konselor, hotline darurat, atau layanan bantuan.

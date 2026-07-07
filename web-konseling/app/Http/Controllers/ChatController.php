@@ -61,10 +61,40 @@ class ChatController extends Controller
         $indikator = $data['indikator'] ?? null;
         $aiResponse = $data['ai_response'] ?? 'Maaf, terjadi kesalahan pada sistem.';
 
+        // Fetch recommended resources based on indicator or category
+        $rincian = $data['rincian_deteksi'] ?? [];
+        $recommendedResources = collect();
+
+        if ($indikator === 'Merah') {
+            $recommendedResources = \App\Models\Resource::where('category', 'Krisis')->limit(2)->get();
+        } else if (!empty($rincian) && isset($rincian[0]['category'])) {
+            $category = $rincian[0]['category'];
+            $recommendedResources = \App\Models\Resource::where('category', 'LIKE', "%{$category}%")->limit(2)->get();
+        }
+
+        if ($recommendedResources->isEmpty() && in_array($indikator, ['Kuning', 'Merah'])) {
+            $recommendedResources = \App\Models\Resource::where('category', 'Regulasi')->limit(2)->get();
+        }
+
+        if ($recommendedResources->isNotEmpty()) {
+            $res = $recommendedResources->first();
+            $resType = $res->type === 'video' ? 'video' : ($res->type === 'artikel' ? 'artikel' : 'kontak');
+            if ($resType === 'kontak') {
+                $aiResponse .= "\n\nMohon segera hubungi layanan bantuan darurat berikut: " . $res->title . " di " . $res->url;
+            } else {
+                $aiResponse .= "\n\nBerikut ada " . $resType . " yang mungkin bisa membantu: [" . $res->title . "](" . $res->url . ")";
+            }
+        }
+
         try {
             if ($user) {
+                // Determine session name if this is the first message in the session
+                $sessionName = $message;
+                $isNewSession = ChatSession::where('user_id', $user->id)->where('session_id', $sessionId)->doesntExist();
+                
                 $chatSession = ChatSession::create([
                     'session_id'     => $sessionId,
+                    'session_name'   => $isNewSession ? substr($message, 0, 50) : null,
                     'user_id'        => $user->id,
                     'user_message'   => $message,
                     'ai_response'    => $aiResponse,
@@ -86,6 +116,7 @@ class ChatController extends Controller
             'total_skor'  => $totalScore,
             'indikator'   => $indikator,
             'ai_response' => $aiResponse,
+            'rekomendasi' => $recommendedResources,
         ]);
     }
 
@@ -181,6 +212,45 @@ class ChatController extends Controller
             'indikator'   => $indikator,
             'ai_response' => $ai_response,
         ];
+    }
+
+    /**
+     * Rename a chat session
+     */
+    public function rename(Request $request, $sessionId)
+    {
+        $request->validate([
+            'session_name' => 'required|string|max:255',
+        ]);
+
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        // Update all messages in the session to have the new session_name
+        ChatSession::where('user_id', $user->id)
+            ->where('session_id', $sessionId)
+            ->update(['session_name' => $request->input('session_name')]);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Delete a chat session
+     */
+    public function destroy(Request $request, $sessionId)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        ChatSession::where('user_id', $user->id)
+            ->where('session_id', $sessionId)
+            ->delete();
+
+        return response()->json(['success' => true]);
     }
 
     /**

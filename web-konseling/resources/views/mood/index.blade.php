@@ -30,7 +30,7 @@
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                 Mood Journal
             </a>
-            <a href="#" class="sidebar-nav-item">
+            <a href="{{ route('resources.index') }}" class="sidebar-nav-item">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
                 Resource Center
             </a>
@@ -103,10 +103,10 @@
             <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:16px; margin-bottom:28px;">
                 @php
                 $stats = [
-                    ['label'=>'Total Sesi',        'value'=>'12',   'icon'=>'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>', 'color'=>'#02838D',  'bg'=>'rgba(2,131,141,0.08)',  'border'=>'rgba(2,131,141,0.18)'],
-                    ['label'=>'Hari Berturut-turut','value'=>'5', 'icon'=>'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19c-2.5 2.5-6.5 2.5-9 0s-2.5-6.5 0-9l4.5-4.5 4.5 4.5c2.5 2.5 2.5 6.5 0 9z"/></svg>', 'color'=>'#F59E0B',  'bg'=>'rgba(245,158,11,0.08)', 'border'=>'rgba(245,158,11,0.18)'],
-                    ['label'=>'Rata-rata Skor',    'value'=>'7.4',  'icon'=>'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>', 'color'=>'#4FAFB6',  'bg'=>'rgba(79,175,182,0.08)', 'border'=>'rgba(79,175,182,0.18)'],
-                    ['label'=>'Stabilitas',        'value'=>'82%',  'icon'=>'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>', 'color'=>'#016C75',  'bg'=>'rgba(1,108,117,0.08)',  'border'=>'rgba(1,108,117,0.18)'],
+                    ['label'=>'Total Sesi',        'value'=>$totalSessions,   'icon'=>'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>', 'color'=>'#02838D',  'bg'=>'rgba(2,131,141,0.08)',  'border'=>'rgba(2,131,141,0.18)'],
+                    ['label'=>'Hari Berturut-turut','value'=>$streak, 'icon'=>'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19c-2.5 2.5-6.5 2.5-9 0s-2.5-6.5 0-9l4.5-4.5 4.5 4.5c2.5 2.5 2.5 6.5 0 9z"/></svg>', 'color'=>'#F59E0B',  'bg'=>'rgba(245,158,11,0.08)', 'border'=>'rgba(245,158,11,0.18)'],
+                    ['label'=>'Rata-rata Skor',    'value'=>$avgScore,  'icon'=>'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>', 'color'=>'#4FAFB6',  'bg'=>'rgba(79,175,182,0.08)', 'border'=>'rgba(79,175,182,0.18)'],
+                    ['label'=>'Stabilitas',        'value'=>$stability . '%',  'icon'=>'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>', 'color'=>'#016C75',  'bg'=>'rgba(1,108,117,0.08)',  'border'=>'rgba(1,108,117,0.18)'],
                 ];
                 @endphp
                 @foreach($stats as $stat)
@@ -138,21 +138,24 @@
                         <span style="font-size:11px; color:#9CA3AF; padding:5px 10px; border-radius:8px; background:#F3FBFC; border:1px solid #E5E7EB; font-weight:600; display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Minggu Ini</span>
                     </div>
 
-                    {{-- CSS Bar Chart --}}
                     @php
-                    $weekData = [
-                        ['day'=>'Sen', 'score'=>7, 'emotion'=>'Hijau',  'icon'=>'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>'],
-                        ['day'=>'Sel', 'score'=>5, 'emotion'=>'Kuning', 'icon'=>'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>'],
-                        ['day'=>'Rab', 'score'=>8, 'emotion'=>'Hijau',  'icon'=>'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>'],
-                        ['day'=>'Kam', 'score'=>4, 'emotion'=>'Kuning', 'icon'=>'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>'],
-                        ['day'=>'Jum', 'score'=>9, 'emotion'=>'Hijau',  'icon'=>'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>'],
-                        ['day'=>'Sab', 'score'=>7, 'emotion'=>'Hijau',  'icon'=>'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>'],
-                        ['day'=>'Min', 'score'=>6, 'emotion'=>'Hijau',  'icon'=>'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>'],
+                    // Add icons to dynamic weekData
+                    $iconMap = [
+                        'Hijau'  => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+                        'Kuning' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+                        'Merah'  => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+                        'Abu'    => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>'
                     ];
+                    
+                    foreach($weekData as &$d) {
+                        $d['icon'] = $iconMap[$d['emotion']];
+                    }
+                    unset($d);
                     $colorMap = [
                         'Hijau'  => ['bar'=>'#02838D', 'bg'=>'rgba(2,131,141,0.1)', 'text'=>'#02838D'],
                         'Kuning' => ['bar'=>'#F59E0B', 'bg'=>'rgba(245,158,11,0.1)','text'=>'#F59E0B'],
                         'Merah'  => ['bar'=>'#D92D20', 'bg'=>'rgba(217,45,32,0.1)', 'text'=>'#D92D20'],
+                        'Abu'    => ['bar'=>'#D1D5DB', 'bg'=>'#F3F4F6',             'text'=>'#9CA3AF'],
                     ];
                     @endphp
                     <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:8px; height:160px; padding:0 4px;">
@@ -189,7 +192,10 @@
                         </span>
                         Distribusi Emosi
                     </h2>
-                    @php
+                    <div style="display:flex; flex-direction:column; gap:16px;">
+                        @foreach($distData as $item)
+                        <div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
                                 <span style="font-size:13px; font-weight:700; color:#231F20; display:flex; align-items:center; gap:6px;">{{ $item['label'] }}</span>
                                 <span style="font-size:13px; font-weight:800; color:{{ $item['color'] }};">{{ $item['pct'] }}%</span>
                             </div>
@@ -310,7 +316,7 @@
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                 Mood Journal
             </a>
-            <a href="#" class="sidebar-nav-item">
+            <a href="{{ route('resources.index') }}" class="sidebar-nav-item">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
                 Resource Center
             </a>
@@ -396,19 +402,37 @@ function saveMood() {
     saveBtn.disabled = true;
     saveBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin-slow 0.8s linear infinite;"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Menyimpan...`;
 
-    // Simulate save (replace with real API call)
-    setTimeout(() => {
-        savedMsg.style.display = 'flex';
-        saveBtn.style.display = 'none';
-        // Reset selection
-        selectedMoodCat = null;
-        document.getElementById('mood-note').value = '';
-        document.querySelectorAll('[onclick^="selectMood"]').forEach(b => {
-            b.style.borderColor = '#E5E7EB';
-            b.style.backgroundColor = '#FFFFFF';
-            b.classList.remove('selected');
-        });
-    }, 900);
+    fetch('{{ route('mood.log') }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ category: selectedMoodCat, note: note })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            savedMsg.style.display = 'flex';
+            saveBtn.style.display = 'none';
+            // Reset selection
+            selectedMoodCat = null;
+            document.getElementById('mood-note').value = '';
+            document.querySelectorAll('[onclick^="selectMood"]').forEach(b => {
+                b.style.borderColor = '#E5E7EB';
+                b.style.backgroundColor = '#FFFFFF';
+                b.classList.remove('selected');
+            });
+            // Reload after 1.5 seconds to update stats
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            alert('Gagal menyimpan mood.');
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Simpan Mood`;
+        }
+    });
 }
 </script>
 @endpush

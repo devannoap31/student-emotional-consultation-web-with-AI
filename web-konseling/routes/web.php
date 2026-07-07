@@ -51,7 +51,10 @@ Route::get('/chat', function (\Illuminate\Http\Request $request) {
     return view('chat.index', compact('sessions', 'currentSessionId', 'currentChats'));
 })->name('chat');
 Route::post('/chat/analyze', [\App\Http\Controllers\ChatController::class, 'analyze'])->name('chat.analyze');
+Route::put('/chat/{session_id}/rename', [\App\Http\Controllers\ChatController::class, 'rename'])->name('chat.rename');
+Route::delete('/chat/{session_id}', [\App\Http\Controllers\ChatController::class, 'destroy'])->name('chat.delete');
 
-Route::get('/mood', function () {
-    return view('mood.index');
-})->name('mood');
+Route::get('/mood', [\App\Http\Controllers\MoodController::class, 'index'])->name('mood');
+Route::post('/mood/log', [\App\Http\Controllers\MoodController::class, 'log'])->name('mood.log');
+
+Route::get('/resources', [\App\Http\Controllers\ResourceController::class, 'index'])->name('resources.index');
