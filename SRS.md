@@ -82,35 +82,88 @@ Secara garis besar, Aether memungkinkan pengguna untuk:
 
 ## 3. System Features
 
-Sistem ini dipecah berdasarkan fitur fungsional utamanya.
+Sistem ini dipecah berdasarkan fitur fungsional utamanya. Setiap fitur dijabarkan secara rinci mencakup deskripsi, urutan aksi-reaksi (*stimulus/response*), dan daftar kebutuhan fungsional (*Functional Requirements*).
 
-### 3.1 Asesmen dan Skrining Keadaan Emosional (AI/NLP)
-**Deskripsi dan Prioritas:** Fitur inti (*High Priority*). Menganalisis teks yang diinputkan pengguna untuk mendeteksi tingkat krisis emosional.
-- **REQ-F-01:** Sistem (FastAPI) harus mampu menerima teks, menormalisasi bahasa gaul (*slang*), dan menganalisis sentimen menggunakan algoritma pemrosesan bahasa alami.
-- **REQ-F-02:** Sistem harus mampu mengembalikan status risiko (Hijau/Aman, Kuning/Distress, Merah/Krisis) dan skor dari skala 0 hingga 100.
-- **REQ-F-03:** Sistem tidak boleh menghitung skor untuk topik yang berada di luar ranah kesehatan mental/akademik.
+### 3.1 Autentikasi dan Manajemen Pengguna
+#### 3.1.1 Description and Priority
+Fitur keamanan inti (*High Priority*) yang menangani pendaftaran pengguna baru, proses masuk (*login*), dan perlindungan hak akses halaman agar privasi data mahasiswa tetap terjaga.
 
-### 3.2 Chatbot Pendampingan Awal (CBT & Mindfulness)
-**Deskripsi dan Prioritas:** Fitur interaksi utama (*High Priority*). Menyediakan respons empatik terhadap curhatan mahasiswa.
-- **REQ-F-04:** AI Engine harus mampu membangkitkan teks balasan yang bersifat suportif, tidak menghakimi, dan berbasis pendekatan psikologis (CBT).
-- **REQ-F-05:** Laravel harus menyimpan *history* (konteks percakapan) dalam 1 sesi agar chatbot mengingat obrolan yang sedang berlangsung.
+#### 3.1.2 Stimulus/Response Sequences
+- **Stimulus:** Pengguna memasukkan kredensial (email dan kata sandi) ke dalam formulir *login*.
+- **Response:** Sistem memvalidasi kredensial terhadap *database*. Jika valid, sistem membuat sesi pengguna (*user session*) dan mengarahkan pengguna ke halaman Dasbor. Jika tidak valid, sistem menampilkan pesan *error*.
 
-### 3.3 Dashboard Mood Tracking Dinamis
-**Deskripsi dan Prioritas:** Visualisasi analitik pengguna (*Medium Priority*).
-- **REQ-F-06:** Sistem harus menampilkan total sesi, rata-rata skor kestabilan (0-10), dan hari berturut-turut (*streak*) berdasarkan data sesi chat di database.
-- **REQ-F-07:** Sistem harus menampilkan visualisasi grafik (*Bar Chart*) tren emosi 7 hari terakhir.
-- **REQ-F-08 (Quick Log):** Pengguna dapat mencatat *mood* manual tanpa chat panjang melalui tombol emoji di dashboard, dan otomatis tersimpan ke riwayat sesi.
+#### 3.1.3 Functional Requirements
+| ID | Requirement |
+| :--- | :--- |
+| FR-01 | Sistem HARUS menyediakan proses registrasi yang meminta nama, email, dan kata sandi. |
+| FR-02 | Sistem HARUS mengenkripsi kata sandi pengguna di dalam database menggunakan *hashing* Bcrypt. |
+| FR-03 | Sistem HARUS menyediakan mekanisme *login* yang aman menggunakan email dan kata sandi. |
+| FR-04 | Sistem HARUS melindungi rute `/chat`, `/mood`, dan `/resources` menggunakan *middleware* autentikasi. |
+| FR-05 | Sistem HARUS memungkinkan pengguna untuk *logout* secara aman dan menghancurkan sesi aktif. |
 
-### 3.4 Pusat Sumber Daya (Resource Center) Terpersonalisasi
-**Deskripsi dan Prioritas:** Modul pendukung (*High Priority*).
-- **REQ-F-09:** Chatbot harus menyisipkan tautan rekomendasi video/artikel secara otomatis ke dalam balasannya sesuai dengan tingkat krisis pengguna (Misal: Video relaksasi ringan untuk "Hijau", Kontak konseling darurat untuk "Merah").
-- **REQ-F-10:** Pengguna dapat menelusuri secara manual direktori *Resource Center* melalui *sidebar*.
+### 3.2 Asesmen dan Skrining Keadaan Emosional (AI/NLP Engine)
+#### 3.2.1 Description and Priority
+Fitur komputasi inti (*High Priority*). Modul berbasis Python FastAPI ini bertugas menganalisis teks curhatan pengguna secara matematis untuk mendeteksi tingkat krisis emosional.
 
-### 3.5 Autentikasi dan Manajemen Sesi
-**Deskripsi dan Prioritas:** Modul keamanan privasi (*High Priority*).
-- **REQ-F-11:** Sistem harus melindungi halaman Chat, Mood, dan Resource menggunakan *Middleware* yang mencegah akses tamu tanpa login.
-- **REQ-F-12:** Pengguna dapat mengganti nama (Rename) sesi obrolan mereka di *sidebar*.
-- **REQ-F-13:** Pengguna dapat menghapus (Delete) riwayat sesi obrolan mereka secara permanen dari database.
+#### 3.2.2 Stimulus/Response Sequences
+- **Stimulus:** Aplikasi Laravel mengirimkan teks (JSON) dari inputan pengguna ke titik akhir (`endpoint`) FastAPI melalui HTTP POST.
+- **Response:** FastAPI memproses teks, menghitung skor, dan mengklasifikasikan emosi, lalu mengembalikan respons berformat JSON ke Laravel.
+
+#### 3.2.3 Functional Requirements
+| ID | Requirement |
+| :--- | :--- |
+| FR-06 | Sistem HARUS menerima masukan teks dan secara otomatis menormalisasi kata-kata gaul (*slang*) Indonesia. |
+| FR-07 | Sistem HARUS menghitung skor *distress* emosional dari 0 hingga 100 berdasarkan pencocokan kata kunci (*Rule-Based*). |
+| FR-08 | Sistem HARUS mengklasifikasikan keadaan emosi ke dalam 3 zona risiko: Stabil (0-35), Distress (36-70), Krisis (>70). |
+| FR-09 | Sistem HARUS memanfaatkan model *Reinforcement Learning* (Q-Learning / `q_table.json`) untuk memilih strategi respons psikologis yang paling optimal (misal: CBT, Validasi). |
+| FR-10 | Sistem HARUS mengabaikan dan memberikan skor 0 untuk masukan teks yang sepenuhnya berada di luar konteks kesehatan mental atau kehidupan akademik. |
+
+### 3.3 Chatbot Pendampingan Awal (Interaksi AI & Gemini)
+#### 3.3.1 Description and Priority
+Fitur interaksi utama (*High Priority*). Menjadi ruang aman bagi mahasiswa untuk bercerita dan mendapatkan balasan empatik dari agen AI.
+
+#### 3.3.2 Stimulus/Response Sequences
+- **Stimulus:** Pengguna mengetik dan mengirim pesan di ruang obrolan.
+- **Response:** UI menampilkan gelembung *chat* pengguna. Sistem memanggil AI Engine untuk membangkitkan teks balasan, kemudian menampilkan teks tersebut seolah-olah sedang mengetik (*typewriter effect*), dan menyimpan riwayat percakapan.
+
+#### 3.3.3 Functional Requirements
+| ID | Requirement |
+| :--- | :--- |
+| FR-11 | Sistem HARUS membangkitkan balasan teks yang berempati dan tidak menghakimi menggunakan Google Gemini API berdasarkan strategi Q-Learning yang terpilih. |
+| FR-12 | Sistem HARUS menyimpan riwayat obrolan (konteks) di dalam satu sesi tunggal agar *chatbot* dapat mengingat percakapan yang sedang berlangsung. |
+| FR-13 | Sistem HARUS memungkinkan pengguna untuk membuat sesi obrolan baru yang kosong kapan saja. |
+| FR-14 | Sistem HARUS memungkinkan pengguna untuk mengganti judul (*rename*) sesi obrolan aktif mereka di *sidebar*. |
+| FR-15 | Sistem HARUS memungkinkan pengguna untuk menghapus riwayat sesi obrolan mereka secara permanen dari database. |
+
+### 3.4 Dashboard Mood Tracking Dinamis
+#### 3.4.1 Description and Priority
+Visualisasi analitik (*Medium Priority*). Menyajikan metrik kesehatan mental berdasarkan riwayat percakapan pengguna.
+
+#### 3.4.2 Stimulus/Response Sequences
+- **Stimulus:** Pengguna mengakses halaman "Mood Tracker".
+- **Response:** Sistem melakukan *query* ke tabel riwayat obrolan pengguna, menghitung rata-rata skor kestabilan, dan me-render grafik *Bar Chart* di layar.
+
+#### 3.4.3 Functional Requirements
+| ID | Requirement |
+| :--- | :--- |
+| FR-16 | Sistem HARUS menampilkan jumlah total sesi, rata-rata skor kestabilan (0-10), dan hari berturut-turut melakukan pencatatan (*streak*). |
+| FR-17 | Sistem HARUS menyediakan visualisasi *Bar Chart* untuk tren emosional selama 7 hari terakhir. |
+| FR-18 | Sistem HARUS menyediakan fitur *Quick Log* yang memungkinkan pengguna mencatat *mood* secara manual menggunakan tombol emoji tanpa harus mengetik teks panjang. |
+
+### 3.5 Pusat Sumber Daya (Resource Center) Terpersonalisasi
+#### 3.5.1 Description and Priority
+Modul dukungan mandiri (*High Priority*). Menyediakan materi psikoedukasi dan kontak darurat.
+
+#### 3.5.2 Stimulus/Response Sequences
+- **Stimulus:** Sistem (AI Engine) mendeteksi level emosi "Krisis" (>70) dari chat pengguna.
+- **Response:** Sistem otomatis menyisipkan komponen UI yang berisi kontak *hotline* darurat di bawah teks balasan AI.
+
+#### 3.5.3 Functional Requirements
+| ID | Requirement |
+| :--- | :--- |
+| FR-19 | Sistem HARUS secara otomatis menyematkan tautan sumber daya yang relevan pada balasan *chatbot* berdasarkan tingkat krisis yang terdeteksi. |
+| FR-20 | Sistem HARUS segera memberikan nomor kontak *hotline* konseling darurat ketika tingkat emosi 'Krisis' terdeteksi. |
+| FR-21 | Sistem HARUS menyediakan halaman direktori manual (Pusat Sumber Daya) tempat pengguna dapat menelusuri artikel dan video relaksasi yang dikategorikan berdasarkan topik. |
 
 ---
 
