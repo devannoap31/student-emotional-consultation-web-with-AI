@@ -34,9 +34,14 @@ Disarankan untuk membaca mulai dari Bagian 2 (*Overall Description*) untuk memah
 **Aether** adalah platform berbasis web yang menyediakan layanan pendampingan kesehatan mental dan dukungan emosional awal (Psychological First Aid) bagi mahasiswa. Sistem menggunakan teknologi NLP untuk menganalisis konteks bahasa dan sentimen pengguna secara mendalam, serta mengklasifikasikan kondisi emosi mahasiswa ke dalam 3 zona risiko (Hijau, Kuning, Merah). Aether beroperasi 24/7 dan menawarkan ruang aman tanpa penghakiman. Platform ini **tidak dirancang** untuk menggantikan psikiater medis profesional, melainkan sebagai alat intervensi awal.
 
 ### 1.5 References
-- `RANCANGAN.txt`: Dokumen rancangan latar belakang dan fitur utama proyek.
-- `documentation.txt`: Panduan penggunaan dan dokumentasi arsitektur file Aether.
-- Standar penulisan SRS berbasis IEEE Std 830-1998.
+Dokumen spesifikasi kebutuhan perangkat lunak ini disusun dengan merujuk pada berbagai dokumentasi resmi serta literatur rekayasa perangkat lunak. Untuk memastikan pembaca dapat mengakses kembali setiap dokumen sumber secara akurat, berikut adalah daftar referensi lengkap yang memuat informasi penulis, judul, nomor versi, tanggal publikasi, serta lokasi pemuatan materi:
+
+[1] Laravel Team, "Laravel Framework Documentation," Versi 13.x, 2026. [Online]. Available: <https://laravel.com/docs>.  
+[2] Tailwind CSS Team, "Tailwind CSS Framework Documentation," Versi v4.x, 2026. [Online]. Available: <https://tailwindcss.com/docs>.  
+[3] FastAPI, "FastAPI Framework Reference Documentation," Versi 0.x, 2026. [Online]. Available: <https://fastapi.tiangolo.com/>.  
+[4] Google Developers, "Gemini API Reference Documentation," Versi Model Gemini AI, 2026. [Online]. Available: <https://ai.google.dev/docs>.  
+[5] devannoap31, "Repositori Kode Sumber Utama Aplikasi Aether.AI," Versi 1.0 (Main Branch), 2026. [Online]. Available: <https://github.com/devannoap31/student-emotional-consultation-web-with-AI>.  
+[6] K. E. Wiegers, *Software Requirements*, Edisi Kedua (2nd Edition), Redmond, WA: Microsoft Press, 2003.
 
 ---
 
